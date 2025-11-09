@@ -12,6 +12,9 @@
       "dest": "https://ai-quiz-generator-1-nyds.onrender.com/$1"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
