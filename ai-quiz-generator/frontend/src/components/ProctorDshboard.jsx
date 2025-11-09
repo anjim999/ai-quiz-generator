@@ -7,7 +7,8 @@ export default function ProctorDashboard(){
 
   const connect = () => {
     if (!sessionId) return;
-    const ws = new WebSocket(`${import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000"}/ws/proctor/${sessionId}`);
+    const wsUrl = import.meta.env.VITE_API_URL?.replace(/^http/, 'ws') || "ws://127.0.0.1:8000";
+    const ws = new WebSocket(`${wsUrl}/ws/proctor/${sessionId}`);
     ws.onmessage = (ev) => {
       try {
         const msg = JSON.parse(ev.data);

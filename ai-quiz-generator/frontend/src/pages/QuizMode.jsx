@@ -184,7 +184,7 @@ export default function QuizMode() {
         ))}
       </ol>
 
-      <button className="btn btn-primary mt-4" onClick={() => submitExam(false)} disabled={submitted}>
+      <button className="btn btn-primary mt-4 cursor-pointer" onClick={() => submitExam(false)} disabled={submitted}>
         Submit Exam
       </button>
 
@@ -195,7 +195,7 @@ export default function QuizMode() {
             <h2 className="text-lg font-bold">Fullscreen Required</h2>
             <p>You exited fullscreen.</p>
             <button
-              className="btn btn-primary"
+              className="btn btn-primary cursor-pointer"
               onClick={async () => {
                 setIsFsModal(false);
                 await document.documentElement.requestFullscreen();

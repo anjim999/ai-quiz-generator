@@ -304,4 +304,3 @@ async def proctor_ws(websocket: WebSocket, session_id: int):
             await websocket.receive_text()  # keep alive, ignore client messages
     except WebSocketDisconnect:
         ws_manager.disconnect(session_id, websocket)
-

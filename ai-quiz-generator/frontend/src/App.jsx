@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import QuizMode from "./pages/QuizMode";
 import Dashboard from "./pages/Dashboard";
-import ProctorDashboard from "./components/ProtectorDshboard";
+import ProctorDashboard from "./components/ProctorDshboard";
 
 export default function App() {
   return (
