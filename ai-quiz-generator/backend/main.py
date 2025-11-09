@@ -9,6 +9,32 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 import tempfile
 
+# --- NEW (top) ---
+from typing import Dict, List
+from fastapi import WebSocket, WebSocketDisconnect
+import json
+
+class WSManager:
+    def __init__(self):
+        self.active: Dict[int, List[WebSocket]] = {}
+
+    async def connect(self, session_id: int, ws: WebSocket):
+        await ws.accept()
+        self.active.setdefault(session_id, []).append(ws)
+
+    def disconnect(self, session_id: int, ws: WebSocket):
+        if session_id in self.active and ws in self.active[session_id]:
+            self.active[session_id].remove(ws)
+
+    async def broadcast(self, session_id: int, event: dict):
+        for ws in self.active.get(session_id, []):
+            try:
+                await ws.send_text(json.dumps(event))
+            except Exception:
+                pass
+
+ws_manager = WSManager()
+
 
 from database import Base, engine, SessionLocal
 from orm_models import Quiz, Attempt
@@ -159,6 +185,7 @@ def submit_attempt(quiz_id: int, payload: dict, db: Session = Depends(get_db)):
         total_time=total_time,
         score=score,
         answers_json=json.dumps(answers),
+        # total_questions=len(quiz.quiz) if quiz.quiz else 0,
         # set submission timestamp so submitted_at is not NULL
         submitted_at=datetime.now(timezone.utc),
     )
@@ -201,3 +228,80 @@ def export_pdf(quiz_id: int, payload: dict, db: Session = Depends(get_db)):
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
+
+from fastapi import WebSocket
+
+# Start a session (called when user enters QuizMode)
+@app.post("/session/start/{quiz_id}")
+def start_session(
+    quiz_id: int,
+    payload: dict,
+    db: Session = Depends(get_db)
+):
+    q = db.query(Quiz).filter(Quiz.id == quiz_id).one_or_none()
+    if not q:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    total_questions = int(payload.get("total_questions", 0)) or len(json.loads(q.full_quiz_data).get("quiz", []))
+    user_name = payload.get("user_name", "Candidate")
+
+    s = ExamSession(quiz_id=quiz_id, total_questions=total_questions, user_name=user_name)
+    db.add(s); db.commit(); db.refresh(s)
+    return {"session_id": s.id}
+
+# Log proctor events (tab/visibility/fs) and broadcast to dashboard
+@app.post("/session/{session_id}/event")
+async def add_event(session_id: int, payload: dict, db: Session = Depends(get_db)):
+    etype = payload.get("type") or "unknown"
+    meta = json.dumps(payload.get("meta") or {})
+    ev = ProctorEvent(session_id=session_id, type=etype, meta=meta)
+    db.add(ev); db.commit()
+    await ws_manager.broadcast(session_id, {"type": "event", "event": {"type": etype, "meta": payload.get("meta"), "at": ev.at.isoformat()}})
+    return {"saved": True}
+
+# Finish session (submit answers) — replaces /submit_attempt
+@app.post("/session/{session_id}/submit")
+def finish_session(session_id: int, payload: dict, db: Session = Depends(get_db)):
+    s = db.query(ExamSession).filter(ExamSession.id == session_id).one_or_none()
+    if not s:
+        raise HTTPException(status_code=404, detail="Session not found")
+    quiz = db.query(Quiz).filter(Quiz.id == s.quiz_id).one()
+    data = json.loads(quiz.full_quiz_data)
+
+    answers_map = payload.get("answers", {})            # { "0": 2, "1": 1 ... }
+    total_time = int(payload.get("time_taken_seconds", 0))
+    requested_total = int(payload.get("total_time", 0))
+    # score
+    score = 0
+    for i, q in enumerate(data.get("quiz", [])):
+        ans_idx = answers_map.get(str(i)) if isinstance(answers_map, dict) else answers_map.get(i)
+        if ans_idx is not None and q["options"][int(ans_idx)] == q["answer"]:
+            score += 1
+
+    s.finished_at = func.now()
+    s.time_taken_seconds = total_time or None
+    s.score = score
+    s.auto_submitted = bool(payload.get("auto", False))
+    db.commit()
+
+    # also keep previous Attempt table in sync (optional)
+    a = Attempt(
+        quiz_id=s.quiz_id,
+        submitted_at=None,
+        time_taken_seconds=total_time or requested_total,
+        score=score,
+        answers_json=json.dumps(answers_map)
+    )
+    db.add(a); db.commit()
+
+    return {"ok": True, "score": score, "total": len(data.get("quiz", []))}
+
+# WebSocket for proctors to watch live events for a session
+@app.websocket("/ws/proctor/{session_id}")
+async def proctor_ws(websocket: WebSocket, session_id: int):
+    await ws_manager.connect(session_id, websocket)
+    try:
+        while True:
+            await websocket.receive_text()  # keep alive, ignore client messages
+    except WebSocketDisconnect:
+        ws_manager.disconnect(session_id, websocket)
+

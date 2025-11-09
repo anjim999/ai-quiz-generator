@@ -3,7 +3,7 @@ import { generateQuiz } from "../services/api";
 import QuizDisplay from "../components/QuizDisplay";
 import { useNavigate } from "react-router-dom";
 
-const COUNTS = [10, 20, 30, 40, 50];
+const COUNTS = [5,10, 20, 30, 40, 50];
 
 export default function GenerateQuizTab() {
   const [url, setUrl] = useState("");

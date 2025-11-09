@@ -9,5 +9,5 @@ export default function Timer({ totalSeconds, onEnd }) {
   }, [sec, onEnd]);
   const m = Math.floor(sec/60).toString().padStart(2,"0");
   const s = (sec%60).toString().padStart(2,"0");
-  return <div className="font-mono text-lg">{m}:{s}</div>;
+  return <div className="font-mono text-lg">Ends in: {m}:{s}</div>;
 }

@@ -11,8 +11,7 @@ export default function Navbar() {
       </div>
       <div className="flex items-center gap-6">
         <Link className={`hover:text-blue-600 ${active("/")}`} to="/">Home</Link>
-        <Link className={`hover:text-blue-600 ${active("/app")}`} to="/app">Dashboard</Link>
-        <Link className="px-3 py-1 rounded-md bg-emerald-600 text-white" to="/exam">Take Quiz</Link>
+        <Link className={`hover:text-blue-600 ${active("/dashboard")}`} to="/dashboard">Dashboard</Link>
       </div>
     </nav>
   );
