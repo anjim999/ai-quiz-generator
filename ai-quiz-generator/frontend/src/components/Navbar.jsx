@@ -9,7 +9,6 @@ export default function Navbar() {
   return (
     <nav className="flex items-center justify-between py-4 px-6 bg-white/60 backdrop-blur-md shadow-sm">
 
-      {/* Brand */}
       <Link className={`hover:text-blue-600 transition ${active("/")}`} to="/">
         <div className="flex items-center gap-2">
           <img
@@ -17,8 +16,8 @@ export default function Navbar() {
             alt="DeepKlarity Logo"
             className="w-9 h-9 object-contain drop-shadow-sm"
           />
-          <span className="font-extrabold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text tracking-wide">
-            DeepKlarity Exam AI
+          <span className="font-extrabold text-2xl bg-gradient-to-r from-blue-200 to-indigo-600 text-transparent bg-clip-text tracking-wide">
+            DeepKlarity AI
           </span>
         </div>
       </Link>
