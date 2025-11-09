@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import Navbar from "../components/Navbar";
+// import Navbar from "../components/Navbar";
 export default function Home() {
   return (
     <>
     
-          <Navbar/>
+          {/* <Navbar/> */}
 
     <div className="max-w-3xl mx-auto text-center pt-12">
       <img

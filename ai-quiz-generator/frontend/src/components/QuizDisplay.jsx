@@ -84,7 +84,7 @@ export default function QuizDisplay({ data, takeMode = false }) {
           ))}
         </div>
 
-        {takeMode && (
+        {/* {takeMode && (
           <div className="mt-4 flex items-center gap-3">
             {!submitted ? (
               <button className="btn btn-primary" onClick={() => setSubmitted(true)}>Submit Answers</button>
@@ -97,7 +97,7 @@ export default function QuizDisplay({ data, takeMode = false }) {
               </>
             )}
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

@@ -50,8 +50,8 @@ export default function ScoreCard({ data }) {
       </div>
 
       {/* PDF Button */}
-      <button className="btn btn-primary w-full" onClick={downloadPDF}>
-        📄 Download PDF
+      <button className="cursor-pointer btn btn-primary w-full" onClick={downloadPDF}>
+        Download PDF
       </button>
     </div>
   );

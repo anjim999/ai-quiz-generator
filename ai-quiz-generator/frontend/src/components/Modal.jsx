@@ -11,19 +11,19 @@ export default function Modal({ open, onClose, title, scoreCard, assignmentDetai
 
         <div className="flex justify-between items-center mb-4 border-b pb-2">
           <h2 className="text-lg font-bold">{title}</h2>
-          <button className="btn btn-sm btn-outline" onClick={onClose}>✖ Close</button>
+          <button className="cursor-pointer btn btn-sm btn-outline" onClick={onClose}>Close</button>
         </div>
 
         {/* tabs */}
         <div className="flex gap-3 mb-4">
           <button
-            className={`btn btn-sm ${tab === "score" ? "btn-primary" : "btn-outline"}`}
+            className={`cursor-pointer btn btn-sm ${tab === "score" ? "btn-primary" : "btn-outline"}`}
             onClick={() => setTab("score")}
           >
             Score Card
           </button>
           <button
-            className={`btn btn-sm ${tab === "details" ? "btn-primary" : "btn-outline"}`}
+            className={`cursor-pointer btn btn-sm ${tab === "details" ? "btn-primary" : "btn-outline"}`}
             onClick={() => setTab("details")}
           >
             Quiz Details

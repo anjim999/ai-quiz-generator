@@ -21,7 +21,7 @@ export default function HistoryTable({ items, onDetails }) {
               <td className="py-2 pr-3 max-w-[380px] truncate">{row.url}</td>
               <td className="py-2 pr-3">{new Date(row.date_generated).toLocaleString()}</td>
               <td className="py-2">
-                <button className="btn btn-primary" onClick={() => onDetails(row.id)}>Details</button>
+                <button className="btn btn-primary cursor-pointer" onClick={() => onDetails(row.id)}>Details</button>
               </td>
             </tr>
           )) : (

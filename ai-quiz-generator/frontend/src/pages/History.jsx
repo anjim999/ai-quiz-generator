@@ -3,6 +3,7 @@ import HistoryTable from "../components/HistoryTable";
 import Modal from "../components/Modal";
 import ScoreCard from "../components/ScoreCard";
 import QuizDetails from "../components/QuizDetails";
+import QuizDisplay from "../components/QuizDisplay";
 
 export default function History() {
   const [items, setItems] = useState([]);
@@ -26,7 +27,7 @@ export default function History() {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Quiz History</h2>
+      <h2 className="text-xl font-semibold mb-4 cursor-pointer">Quiz History</h2>
 
       <HistoryTable items={items} onDetails={openDetails} />
 

@@ -11,9 +11,9 @@ const Dashboard=()=> {
       
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">AI Wiki Quiz Dashboard</h1>
-        <Link to="/" className="btn btn-ghost focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+        {/* <Link to="/" className="btn btn-ghost focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
           Home
-        </Link>
+        </Link> */}
       </div>
 
       <div className="flex gap-3 mb-6">
@@ -34,9 +34,9 @@ const Dashboard=()=> {
 
       {tab === "generate" ? <GenerateQuizTab /> : <HistoryTab />}
 
-      <footer className="pt-10 text-center text-xs opacity-60">
+      {/* <footer className="pt-10 text-center text-xs opacity-60">
         DeepKlarity Assignment • FastAPI + React
-      </footer>
+      </footer> */}
 
     </div>
   );

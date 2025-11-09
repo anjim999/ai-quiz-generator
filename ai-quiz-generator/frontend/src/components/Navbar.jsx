@@ -1,18 +1,49 @@
 import { Link, useLocation } from "react-router-dom";
+import deepklarityLogo from "../assets/images/deepklarity-logo.png";
 
 export default function Navbar() {
   const { pathname } = useLocation();
-  const active = (p) => pathname.startsWith(p) ? "text-blue-600" : "text-gray-600";
+  const active = (p) =>
+    pathname.startsWith(p) ? "text-blue-600 font-semibold" : "text-gray-600";
+
   return (
-    <nav className="flex items-center justify-between py-4">
-      <div className="flex items-center gap-3">
-        <img src="https://i.pravatar.cc/40" className="w-10 h-10 rounded-full" />
-        <span className="font-semibold">Welcome, Candidate</span>
+    <nav className="flex items-center justify-between py-4 px-6 bg-white/60 backdrop-blur-md shadow-sm">
+
+      {/* Brand */}
+      <Link className={`hover:text-blue-600 transition ${active("/")}`} to="/">
+        <div className="flex items-center gap-2">
+          <img
+            src={deepklarityLogo}
+            alt="DeepKlarity Logo"
+            className="w-9 h-9 object-contain drop-shadow-sm"
+          />
+          <span className="font-extrabold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text tracking-wide">
+            DeepKlarity Exam AI
+          </span>
+        </div>
+      </Link>
+
+      {/* Nav links */}
+      <div className="flex items-center gap-8">
+        <Link className={`hover:text-blue-600 transition ${active("/")}`} to="/">
+          Home
+        </Link>
+
+        <Link
+          className={`hover:text-blue-600 transition ${active("/dashboard")}`}
+          to="/dashboard"
+        >
+          Dashboard
+        </Link>
+
+        {/* Profile */}
+        <img
+          src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+          className="w-9 h-9 rounded-full cursor-pointer hover:scale-110 hover:shadow-md transition-all"
+          alt="Profile"
+        />
       </div>
-      <div className="flex items-center gap-6">
-        <Link className={`hover:text-blue-600 ${active("/")}`} to="/">Home</Link>
-        <Link className={`hover:text-blue-600 ${active("/dashboard")}`} to="/dashboard">Dashboard</Link>
-      </div>
+
     </nav>
   );
 }

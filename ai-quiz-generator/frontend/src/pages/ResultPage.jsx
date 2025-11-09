@@ -20,7 +20,7 @@ export default function ResultPage() {
   const retakeQuiz = () => {
     let active = JSON.parse(localStorage.getItem("activeQuiz"));
     if (active) {
-      active.answers = {}; // clear old answers
+      active.answers = {};
       localStorage.setItem("activeQuiz", JSON.stringify(active));
     }
     nav("/exam");
@@ -32,10 +32,14 @@ export default function ResultPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user: "Candidate",
-          count: result.count,
-          duration_str: `${mins}m ${secs}s`,
-        }),
+  user: "Candidate",
+  count: result.count,
+  duration_str: `${mins}m ${secs}s`,
+  user_answers: result.answers,     
+  score: result.score,            
+  total: result.count               
+}),
+
       });
 
       const blob = await res.blob();
@@ -51,7 +55,7 @@ export default function ResultPage() {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 rounded-xl border shadow">
-      <h2 className="text-2xl font-bold text-center mb-4">✅ Quiz Completed</h2>
+      <h2 className="text-2xl font-bold text-center mb-4">Quiz Completed</h2>
 
       <div className="space-y-2 text-lg">
         <p><b>Total Questions:</b> {result.count}</p>
@@ -61,17 +65,18 @@ export default function ResultPage() {
       </div>
 
       <div className="flex flex-col gap-3 mt-6">
-        <button className="btn btn-primary w-full" onClick={downloadPDF}>
-          📄 Download PDF
+        <button className="cursor-pointer btn btn-primary w-full" onClick={downloadPDF}>
+          Download PDF
         </button>
-        <button className="btn btn-success text-white w-full" onClick={retakeQuiz}>
-          🔁 Retake Quiz
+
+        <button className="cursor-pointer btn btn-success w-full" onClick={retakeQuiz}>
+          Retake Quiz
         </button>
-        <button className="btn btn-outline w-full" onClick={() => nav("/dashboard")}>
-          ❌ Close
+
+        <button className="cursor-pointer btn btn-error w-full" onClick={() => nav("/dashboard")}>
+          Close
         </button>
       </div>
     </div>
   );
 }
-
