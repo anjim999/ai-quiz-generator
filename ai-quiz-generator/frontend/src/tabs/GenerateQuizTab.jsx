@@ -91,8 +91,8 @@ async function handleGenerate() {
         </button>
 
         {data && (
-  <button
-    className="cursor-pointer bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2 rounded-lg shadow transition"
+  <button 
+    className="btn bg-green-600 hover:bg-green-700 text-white cursor-pointer"
     onClick={() => navigate("/exam")}
   >
     Start Quiz
