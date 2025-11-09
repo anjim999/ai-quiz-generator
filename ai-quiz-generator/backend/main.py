@@ -29,7 +29,7 @@ ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     # add your deployed frontend:
-    "https://ai-quiz-generator-jade.vercel.app",
+    "https://ai-quiz-generator-sepia.vercel.app",
 ]
 app.add_middleware(
     CORSMiddleware,

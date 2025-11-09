@@ -91,13 +91,14 @@ async function handleGenerate() {
         </button>
 
         {data && (
-          <button 
-            className="btn btn-success text-white cursor-pointer hover:opacity-90" 
-            onClick={() => navigate("/exam")}
-          >
-            Start Quiz
-          </button>
-        )}
+  <button
+    className="cursor-pointer bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2 rounded-lg shadow transition"
+    onClick={() => navigate("/exam")}
+  >
+    Start Quiz
+  </button>
+)}
+
       </div>
 
       {data && <QuizDisplay data={data} hideAnswers={hideAnswers} />}
