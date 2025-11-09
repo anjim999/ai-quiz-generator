@@ -29,11 +29,11 @@ ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     # add your deployed frontend:
-    # "https://ai-quiz-generator-jade.vercel.app",
+    "https://ai-quiz-generator-jade.vercel.app",
 ]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins={"*"},
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
