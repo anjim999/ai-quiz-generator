@@ -1,132 +1,120 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+// import { useCallback, useEffect, useRef, useState } from "react";
 
-export default function ProctorGuard({
-  sessionId,
-  maxStrikes = 3,
-  onAutoSubmit,
-  onStrikeChange
-}) {
-  const [fsOpen, setFsOpen] = useState(document.fullscreenElement != null);
-  const [videoStream, setVideoStream] = useState(null);
-  const strikes = useRef({ tab: 0, fs: 0, total: 0 });
-  const debounceRef = useRef(0);
+// export default function ProctorGuard({
+//   sessionId,
+//   maxStrikes = 3,
+//   onAutoSubmit,
+//   onStrikeChange
+// }) {
+//   const [fsOpen, setFsOpen] = useState(!!document.fullscreenElement);
+//   const videoRef = useRef(null);
+//   const streamRef = useRef(null);
+//   const strikesRef = useRef({ tab: 0, fs: 0, total: 0 });
+//   const debounceRef = useRef(0);
 
-  // helper: send event to backend
-  const postEvent = useCallback(async (type, meta={}) => {
-    if (!sessionId) return;
-    try {
-      await fetch(`${import.meta.env.VITE_API_URL}/session/${sessionId}/event`, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ type, meta })
-      });
-    } catch {}
-  }, [sessionId]);
+//   const postEvent = useCallback(async (type, meta={}) => {
+//     if (!sessionId) return;
+//     try {
+//       await fetch(`${import.meta.env.VITE_API_URL}/session/${sessionId}/event`, {
+//         method: "POST",
+//         headers: {"Content-Type":"application/json"},
+//         body: JSON.stringify({ type, meta })
+//       });
+//     } catch {}
+//   }, [sessionId]);
 
-  // prevent double count within 800ms
-  const bump = useCallback(async (kind) => {
-    const now = Date.now();
-    if (now - debounceRef.current < 800) return; // debounce
-    debounceRef.current = now;
+//   const stopCam = useCallback(() => {
+//     try { streamRef.current?.getTracks?.().forEach(t => t.stop()); } catch {}
+//   }, []);
 
-    strikes.current[kind] += 1;
-    strikes.current.total += 1;
-    onStrikeChange?.(strikes.current);
+//   // Expose stop for QuizMode to call on submit
+//   useEffect(() => {
+//     window.__stopProctorCamera = stopCam;
+//     return () => { delete window.__stopProctorCamera; };
+//   }, [stopCam]);
 
-    await postEvent(kind === "tab" ? "tab-blur" : "fs-exit", { ...strikes.current });
+//   const bump = useCallback(async (kind) => {
+//     const now = Date.now();
+//     if (now - debounceRef.current < 800) return; // debounce double events
+//     debounceRef.current = now;
 
-    // rule: if fs exit ≥ 1 AND tab switch ≥ 1 → auto submit
-    if (strikes.current.fs >= 1 && strikes.current.tab >= 1) {
-      onAutoSubmit?.("rule_combo");
-      return;
-    }
-    // rule: total ≥ 3 → auto submit
-    if (strikes.current.total >= maxStrikes) {
-      onAutoSubmit?.("rule_total");
-    }
-  }, [maxStrikes, onAutoSubmit, onStrikeChange, postEvent]);
+//     strikesRef.current[kind] += 1;
+//     strikesRef.current.total += 1;
+//     onStrikeChange?.({ ...strikesRef.current });
 
-  // fullscreen listeners
-  useEffect(() => {
-    const onFsChange = () => {
-      const open = document.fullscreenElement != null;
-      setFsOpen(open);
-      if (open) {
-        postEvent("fs-enter");
-      } else {
-        bump("fs");
-      }
-    };
-    document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
-  }, [bump, postEvent]);
+//     await postEvent(kind === "tab" ? "tab-blur" : "fs-exit", { ...strikesRef.current });
 
-  // tab/visibility listeners (single strike source = visibility)
-  useEffect(() => {
-    const onVis = () => {
-      if (document.hidden) bump("tab");
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
-  }, [bump]);
+//     // RULES:
+//     // 1) fs exit >= 1 and tab >= 1 => auto-submit
+//     if (strikesRef.current.fs >= 1 && strikesRef.current.tab >= 1) {
+//       onAutoSubmit?.("combo");
+//       return;
+//     }
+//     // 2) total >= max → auto-submit
+//     if (strikesRef.current.total >= maxStrikes) {
+//       onAutoSubmit?.("max");
+//     }
+//   }, [maxStrikes, onAutoSubmit, onStrikeChange, postEvent]);
 
-  // webcam start
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        if (!cancelled) setVideoStream(stream);
-      } catch (e) {
-        // still continue exam but log
-        postEvent("webcam-error", { message: String(e) });
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [postEvent]);
+//   // Fullscreen watcher
+//   useEffect(() => {
+//     const onFs = () => {
+//       const open = !!document.fullscreenElement;
+//       setFsOpen(open);
+//       if (open) postEvent("fs-enter");
+//       else bump("fs");
+//     };
+//     document.addEventListener("fullscreenchange", onFs);
+//     return () => document.removeEventListener("fullscreenchange", onFs);
+//   }, [bump, postEvent]);
 
-  // expose a stop method on window for submit() to call
-  useEffect(() => {
-    window.__stopProctorCamera = () => {
-      try {
-        videoStream?.getTracks()?.forEach(t => t.stop());
-      } catch {}
-    };
-  }, [videoStream]);
+//   // Tab/visibility watcher
+//   useEffect(() => {
+//     const onVis = () => { if (document.hidden) bump("tab"); };
+//     document.addEventListener("visibilitychange", onVis);
+//     return () => document.removeEventListener("visibilitychange", onVis);
+//   }, [bump]);
 
-  // UI overlay when fullscreen exited
-  if (!fsOpen) {
-    return (
-      <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-6">
-        <div className="bg-white rounded-xl p-6 max-w-md w-full text-center space-y-4">
-          <h3 className="text-lg font-semibold">Fullscreen Required</h3>
-          <p className="text-sm text-gray-600">
-            You exited fullscreen during the exam. Re-enter to continue, or submit now.
-          </p>
-          <div className="flex gap-3 justify-center">
-            <button
-              className="btn btn-primary"
-              onClick={() => document.documentElement.requestFullscreen()}
-            >
-              Re-enter Fullscreen
-            </button>
-            <button className="btn btn-ghost border" onClick={() => onAutoSubmit?.("fs_exit_prompt")}>
-              Submit & Exit
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+//   // Start camera once
+//   useEffect(() => {
+//     let cancelled = false;
+//     (async () => {
+//       try {
+//         const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+//         if (cancelled) { s.getTracks().forEach(t => t.stop()); return; }
+//         streamRef.current = s;
+//         if (videoRef.current) videoRef.current.srcObject = s;
+//       } catch (e) {
+//         await postEvent("webcam-error", { message: String(e) });
+//         onAutoSubmit?.("cam_denied");
+//       }
+//     })();
+//     return () => { cancelled = true; stopCam(); };
+//   }, [onAutoSubmit, postEvent, stopCam]);
 
-  // tiny hidden video element (stream active) – no UI shown
-  return (
-    <video
-      className="hidden"
-      autoPlay
-      muted
-      playsInline
-      ref={el => { if (el && videoStream) el.srcObject = videoStream; }}
-    />
-  );
-}
+//   // FS overlay when exited
+//   if (!fsOpen) {
+//     return (
+//       <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-6">
+//         <div className="bg-white rounded-xl p-6 max-w-md w-full text-center space-y-4">
+//           <h3 className="text-lg font-semibold">Fullscreen Required</h3>
+//           <p className="text-sm text-gray-600">You exited fullscreen. Re-enter to continue, or submit now.</p>
+//           <div className="flex gap-3 justify-center">
+//             <button
+//               className="btn btn-primary"
+//               onClick={() => document.documentElement.requestFullscreen()}
+//             >
+//               Re-enter Fullscreen
+//             </button>
+//             <button className="btn btn-ghost border" onClick={() => onAutoSubmit?.("fs_exit_prompt")}>
+//               Submit & Exit
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // Hidden video element just to keep stream alive
+//   return <video ref={videoRef} className="hidden" autoPlay muted playsInline />;
+// }

@@ -34,27 +34,27 @@ class Attempt(Base):
     answers_json = Column(Text, nullable=True)  # {"0":"A", "1":"C", ...}
 
 
-# --- NEW ---
-from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, ForeignKey
-from sqlalchemy.sql import func
-from database import Base
+# # --- NEW ---
+# from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, ForeignKey
+# from sqlalchemy.sql import func
+# from database import Base
 
-class ExamSession(Base):
-    __tablename__ = "exam_sessions"
-    id = Column(Integer, primary_key=True)
-    quiz_id = Column(Integer, ForeignKey("quizzes.id"), index=True, nullable=False)
-    started_at = Column(DateTime(timezone=True), server_default=func.now())
-    finished_at = Column(DateTime(timezone=True), nullable=True)
-    total_questions = Column(Integer, nullable=False, default=0)
-    user_name = Column(String(200), nullable=True)
-    auto_submitted = Column(Boolean, default=False)
-    score = Column(Integer, nullable=True)
-    time_taken_seconds = Column(Integer, nullable=True)
+# class ExamSession(Base):
+#     __tablename__ = "exam_sessions"
+#     id = Column(Integer, primary_key=True)
+#     quiz_id = Column(Integer, ForeignKey("quizzes.id"), index=True, nullable=False)
+#     started_at = Column(DateTime(timezone=True), server_default=func.now())
+#     finished_at = Column(DateTime(timezone=True), nullable=True)
+#     total_questions = Column(Integer, nullable=False, default=0)
+#     user_name = Column(String(200), nullable=True)
+#     auto_submitted = Column(Boolean, default=False)
+#     score = Column(Integer, nullable=True)
+#     time_taken_seconds = Column(Integer, nullable=True)
 
-class ProctorEvent(Base):
-    __tablename__ = "proctor_events"
-    id = Column(Integer, primary_key=True)
-    session_id = Column(Integer, ForeignKey("exam_sessions.id"), index=True, nullable=False)
-    at = Column(DateTime(timezone=True), server_default=func.now())
-    type = Column(String(64), nullable=False)   # 'tab-blur' | 'visibility-hidden' | 'fs-exit' | 'fs-enter' | 'submit'
-    meta = Column(Text, nullable=True)
+# class ProctorEvent(Base):
+#     __tablename__ = "proctor_events"
+#     id = Column(Integer, primary_key=True)
+#     session_id = Column(Integer, ForeignKey("exam_sessions.id"), index=True, nullable=False)
+#     at = Column(DateTime(timezone=True), server_default=func.now())
+#     type = Column(String(64), nullable=False)   # 'tab-blur' | 'visibility-hidden' | 'fs-exit' | 'fs-enter' | 'submit'
+#     meta = Column(Text, nullable=True)

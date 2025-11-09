@@ -68,7 +68,16 @@ export default function QuizMode() {
     }).catch(() => toast.error("Server save failed, but exam ended"));
 
     toast.success(`Submitted! Score: ${score}/${count}`);
-    setTimeout(() => nav("/dashboard"), 900);
+setTimeout(() => {
+  localStorage.setItem("lastResult", JSON.stringify({
+    quizId: active.id,
+    score,
+    usedTime,
+    totalSeconds,
+    count
+  }));
+  nav("/result");
+}, 900);
   }
 
   // ✅ Handle violation counting
