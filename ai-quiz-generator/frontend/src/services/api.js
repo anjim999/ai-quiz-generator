@@ -1,3 +1,4 @@
+//frontend/src/services/api.js
 const BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export async function generateQuiz(url, forceRefresh = false, count = 10) {

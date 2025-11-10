@@ -1,3 +1,4 @@
+# ai-quiz-generator/backend/schemas.py
 from pydantic import BaseModel, Field, HttpUrl
 from typing import List, Literal
 
