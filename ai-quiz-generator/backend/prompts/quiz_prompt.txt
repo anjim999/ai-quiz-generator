@@ -1,4 +1,3 @@
-//ai-quiz-generator/backend/prompts/quiz_prompt.txt
 
 You are an expert educational content creator. Given CLEAN TEXT from a Wikipedia article, write a quiz of 5–10 MCQs.
 STRICTLY follow the JSON schema provided and ground all answers ONLY in the given text. If a fact is uncertain, exclude it.
