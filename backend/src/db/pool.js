@@ -1,3 +1,4 @@
+// backend/src/db/pool.js
 import "dotenv/config";
 import pg from "pg";
 

@@ -1,3 +1,4 @@
+// backend/src/db/init.js
 import { queryWithRetry } from "./pool.js";
 
 export async function initDb() {
@@ -6,6 +7,7 @@ export async function initDb() {
     id SERIAL PRIMARY KEY,
     url VARCHAR(2048) NOT NULL,
     title VARCHAR(512) NOT NULL,
+    user_id INT,
     date_generated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     scraped_html TEXT,
     scraped_text TEXT,
@@ -24,6 +26,7 @@ export async function initDb() {
   CREATE TABLE IF NOT EXISTS quiz_attempts (
     id SERIAL PRIMARY KEY,
     quiz_id INT NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+    user_id INT NOT NULL,
     started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     submitted_at TIMESTAMPTZ,
     total_time INT,
@@ -46,4 +49,52 @@ export async function initDb() {
     console.error("❌ DB init error:", err && err.stack ? err.stack : err);
     throw err;
   }
+  // 1. Users table
+  await queryWithRetry(
+    `
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password VARCHAR(255) NOT NULL,
+      role VARCHAR(50) NOT NULL DEFAULT 'user',     -- 'user' | 'admin'
+      is_verified BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    `
+  );
+
+  // Ensure existing DBs get `user_id` on quiz_attempts (safe no-op if present)
+  await queryWithRetry(
+    `
+    ALTER TABLE quiz_attempts ADD COLUMN IF NOT EXISTS user_id INT;
+    `
+  );
+
+  // Ensure existing DBs get `user_id` on quizzes (safe no-op if present)
+  await queryWithRetry(
+    `
+    ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS user_id INT;
+    `
+  );
+
+  // 2. OTPs table
+  await queryWithRetry(
+    `
+    CREATE TABLE IF NOT EXISTS otps (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) NOT NULL,
+      code VARCHAR(10) NOT NULL,
+      purpose VARCHAR(20) NOT NULL,                -- 'REGISTER' | 'RESET'
+      expires_at TIMESTAMPTZ NOT NULL,
+      used BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    `
+  );
+
+  console.log('✅ DB schema ready');
 }
+
+  
+

@@ -12,19 +12,21 @@ export function health(_req, res) {
 /**
  * POST /generate_quiz?count=10
  * body: { url: string, force_refresh?: boolean }
- * Behavior exactly matches FastAPI:
- *  - Validate Wikipedia URL
- *  - Optional cache by URL if ENABLE_URL_CACHE=true
- *  - Scrape, LLM generate (or fallback), trim to count
- *  - Upsert quizzes row; return payload with id
  *
- * TC: O(S + Q + DB) ≈ O(S + Q)
- * SC: O(S + Q)
+ * SAME as original, but:
+ *  - requires logged-in user (req.user.userId)
+ *  - quizzes are per user (user_id column)
  */
 export async function generateQuiz(req, res, next) {
   try {
     const { url, force_refresh = false } = req.body || {};
-    const count = Math.max(5, Math.min(50, parseInt(req.query.count ?? "10", 10)));
+    const count = Math.max(1, Math.min(50, parseInt(req.query.count ?? "10", 10)));
+
+    // 🔐 new: must be logged in
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ message: "Unauthorized: no user in request" });
+    }
+    const userId = req.user.userId;
 
     if (!isWikipediaUrl(String(url))) {
       const e = new Error("Only Wikipedia article URLs are accepted.");
@@ -33,7 +35,12 @@ export async function generateQuiz(req, res, next) {
     }
 
     const useCache = (process.env.ENABLE_URL_CACHE ?? "true").toLowerCase() === "true";
-    const ex = await query("SELECT * FROM quizzes WHERE url=$1 LIMIT 1", [url]);
+
+    // 🔐 changed: cache per (url, user_id) instead of global
+    const ex = await query(
+      "SELECT * FROM quizzes WHERE url=$1 AND user_id=$2 LIMIT 1",
+      [url, userId]
+    );
     const existing = ex.rows[0];
 
     if (useCache && existing && !force_refresh) {
@@ -65,17 +72,19 @@ export async function generateQuiz(req, res, next) {
 
     let recordId;
     if (!existing) {
-      // Insert; on conflict (unique url), fetch that row
       try {
         const ins = await query(
-          `INSERT INTO quizzes (url, title, scraped_html, scraped_text, full_quiz_data)
-           VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-          [url, title, rawHtml, cleanedText, JSON.stringify(payload)]
+          `INSERT INTO quizzes (url, title, scraped_html, scraped_text, full_quiz_data, user_id)
+           VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+          [url, title, rawHtml, cleanedText, JSON.stringify(payload), userId]
         );
         recordId = ins.rows[0].id;
       } catch (err) {
-        // conflict fallback
-        const row = await query("SELECT id FROM quizzes WHERE url=$1 LIMIT 1", [url]);
+        // conflict fallback: find that user's quiz by (url,user_id)
+        const row = await query(
+          "SELECT id FROM quizzes WHERE url=$1 AND user_id=$2 LIMIT 1",
+          [url, userId]
+        );
         recordId = row.rows[0].id;
         await query(
           `UPDATE quizzes
@@ -101,30 +110,49 @@ export async function generateQuiz(req, res, next) {
   }
 }
 
-/** GET /history — TC: O(N), SC: O(N) */
-export async function history(_req, res, next) {
+
+export async function history(req, res, next) {
   try {
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const userId = req.user.userId;
+
     const rows = await query(
-      "SELECT id, url, title, date_generated FROM quizzes ORDER BY date_generated DESC",
-      []
+      "SELECT id, url, title, date_generated FROM quizzes WHERE user_id = $1 ORDER BY date_generated DESC",
+      [userId]
     );
+
     const items = rows.rows.map((r) => ({
       id: r.id,
       url: r.url,
       title: r.title,
       date_generated: r.date_generated?.toISOString() ?? "",
     }));
+
     res.json({ items });
   } catch (err) {
     next(err);
   }
 }
 
-/** GET /quiz/:quiz_id — TC: O(1), SC: O(1) */
+/** GET /quiz/:quiz_id — TC: O(1), SC: O(1)
+ *
+ * SAME as original, but:
+ *  - quiz must belong to current user
+ */
 export async function getQuiz(req, res, next) {
   try {
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const userId = req.user.userId;
+
     const quizId = Number(req.params.quiz_id);
-    const rows = await query("SELECT * FROM quizzes WHERE id=$1 LIMIT 1", [quizId]);
+    const rows = await query(
+      "SELECT * FROM quizzes WHERE id=$1 AND user_id=$2 LIMIT 1",
+      [quizId, userId]
+    );
     const r = rows.rows[0];
     if (!r) {
       const e = new Error("Quiz not found");
@@ -139,13 +167,14 @@ export async function getQuiz(req, res, next) {
   }
 }
 
-/**
- * POST /submit_attempt/:quiz_id
- * body: { answers, score, time_taken_seconds, total_time?, total_questions? }
- * TC: O(1), SC: O(1)
- */
+
 export async function submitAttempt(req, res, next) {
   try {
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const userId = req.user.userId;
+
     const quizId = Number(req.params.quiz_id);
     const chk = await query("SELECT id FROM quizzes WHERE id=$1", [quizId]);
     if (!chk.rowCount) {
@@ -158,16 +187,17 @@ export async function submitAttempt(req, res, next) {
     const answers = payload.answers || {};
     const score = Number(payload.score ?? 0);
     const time_taken = Number(payload.time_taken_seconds ?? 0);
-    const total_time = payload.total_time != null ? Number(payload.total_time) : null;
+    const total_time =
+      payload.total_time != null ? Number(payload.total_time) : null;
     const total_questions =
       payload.total_questions != null ? Number(payload.total_questions) : null;
 
     const ins = await query(
       `INSERT INTO quiz_attempts
-         (quiz_id, submitted_at, total_time, total_questions, time_taken_seconds, score, answers_json)
-       VALUES ($1, NOW(), $2, $3, $4, $5, $6)
+         (quiz_id, user_id, submitted_at, total_time, total_questions, time_taken_seconds, score, answers_json)
+       VALUES ($1, $2, NOW(), $3, $4, $5, $6, $7)
        RETURNING id`,
-      [quizId, total_time, total_questions, time_taken, score, JSON.stringify(answers)]
+      [quizId, userId, total_time, total_questions, time_taken, score, JSON.stringify(answers)]
     );
 
     res.json({ saved: true, attempt_id: ins.rows[0].id });
@@ -176,12 +206,7 @@ export async function submitAttempt(req, res, next) {
   }
 }
 
-/**
- * POST /export_pdf/:quiz_id
- * body: { count?: number, user?: string, duration_str?: string }
- * Streams a PDF file (attachment)
- * TC: O(Q), SC: O(1)
- */
+
 export async function exportPdf(req, res, next) {
   try {
     const quizId = Number(req.params.quiz_id);

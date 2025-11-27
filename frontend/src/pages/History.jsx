@@ -4,7 +4,7 @@ import Modal from "../components/Modal";
 import ScoreCard from "../components/ScoreCard";
 import QuizDetails from "../components/QuizDetails";
 import QuizDisplay from "../components/QuizDisplay";
-
+import Navbar from "../components/Navbar";
 export default function History() {
   const [items, setItems] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
@@ -26,7 +26,9 @@ export default function History() {
   }
 
   return (
+    <><Navbar/>
     <div className="p-6">
+
       <h2 className="text-xl font-semibold mb-4 cursor-pointer">Quiz History</h2>
 
       <HistoryTable items={items} onDetails={openDetails} />
@@ -41,5 +43,6 @@ export default function History() {
         />
       )}
     </div>
+    </>
   );
 }

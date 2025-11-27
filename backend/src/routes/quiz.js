@@ -7,16 +7,20 @@ import {
   submitAttempt,
   exportPdf,
 } from "../controllers/quiz.controller.js";
+import auth from "../middleware/auth.js";
 
 const router = Router();
 
+// Public
 router.get("/health", health);
+
+// All quiz actions require login
+router.use(auth);
+
 router.post("/generate_quiz", generateQuiz);
 router.get("/history", history);
 router.get("/quiz/:quiz_id", getQuiz);
-router.post("/submit_attempt/:quiz_id", submitAttempt);
+router.post("/submit_attempt/:quiz_id",submitAttempt);
 router.post("/export_pdf/:quiz_id", exportPdf);
-
-// WebSocket proctor endpoints were commented out in your Python; omitted for parity.
 
 export default router;

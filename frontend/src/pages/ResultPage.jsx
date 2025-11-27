@@ -1,7 +1,7 @@
 // src/pages/ResultPage.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { authHeaders } from "../services/api";
 export default function ResultPage() {
   const nav = useNavigate();
   const [result, setResult] = useState(null);
@@ -28,19 +28,33 @@ export default function ResultPage() {
 
   const downloadPDF = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/export_pdf/${result.quizId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-  user: "Candidate",
-  count: result.count,
-  duration_str: `${mins}m ${secs}s`,
-  user_answers: result.answers,     
-  score: result.score,            
-  total: result.count               
-}),
+      const headers = authHeaders({ "Content-Type": "application/json" });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/quiz/export_pdf/${result.quizId}`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            user: "Candidate",
+            count: result.count,
+            duration_str: `${mins}m ${secs}s`,
+            user_answers: result.answers,
+            score: result.score,
+            total: result.count,
+          }),
+        }
+      );
 
-      });
+      if (res.status === 401) {
+        alert("Unauthorized: please log in to download the PDF.");
+        return;
+      }
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        alert(`Failed to get PDF: ${res.status} ${text}`);
+        return;
+      }
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -48,12 +62,15 @@ export default function ResultPage() {
       a.href = url;
       a.download = `quiz_result_${result.quizId}.pdf`;
       a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (err) {
+      console.error("Failed to download PDF", err);
       alert("Failed to download PDF");
     }
   };
 
   return (
+  <>
     <div className="max-w-md mx-auto mt-10 p-6 rounded-xl border shadow">
       <h2 className="text-2xl font-bold text-center mb-4">Quiz Completed</h2>
 
@@ -78,5 +95,6 @@ export default function ResultPage() {
         </button>
       </div>
     </div>
+    </>
   );
 }

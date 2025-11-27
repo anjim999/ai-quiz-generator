@@ -1,47 +1,53 @@
-import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import helmet from "helmet";
 import morgan from "morgan";
-import { parseOrigins } from "./utils/utils.js";
-import quizRoutes from "./routes/quiz.routes.js";
-import { errorHandler } from "./middlewares/error.js";
-import "./db/pool.js"; 
+
+import quizRoutes from "./routes/quiz.js";
+import authRoutes from "./routes/auth.js";
+import adminRoutes from "./routes/admin.js";
+
 import { initDb } from "./db/init.js";
+import { PORT } from "./config/env.js";
 
 const app = express();
 
-// CORS (mirrors FastAPI config)
-const allowed = parseOrigins(process.env.CORS_ORIGINS);
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin || allowed.includes("*") || allowed.includes(origin)) return cb(null, true);
-      return cb(null, false);
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Disposition"],
-  })
-);
+const whitelist = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
 
-app.use(helmet());
+app.use(cors(corsOptions));
+app.use(express.json());
 app.use(morgan("dev"));
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true }));
 
-app.use("/", quizRoutes);
-app.use(errorHandler);
+app.use("/api/auth", authRoutes);
 
-const PORT = Number(process.env.PORT || 8000);
+app.use("/api/quiz", quizRoutes);
+
+app.use("/api/admin", adminRoutes);
+
+app.get("/", (_req, res) => {
+  res.json({ status: "ok", message: "AI Quiz Generator backend" });
+});
 
 async function startServer() {
-  await initDb(); // Create tables if missing (like FastAPI)
+  try {
+    await initDb();
 
-  app.listen(PORT, () => {
-    console.log(`✅ Node API running at http://localhost:${PORT}`);
-  });
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌ Failed to start server:", err);
+    process.exit(1);
+  }
 }
 
 startServer();

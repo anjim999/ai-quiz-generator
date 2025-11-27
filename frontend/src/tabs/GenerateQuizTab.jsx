@@ -3,7 +3,7 @@ import { generateQuiz } from "../services/api";
 import QuizDisplay from "../components/QuizDisplay";
 import { useNavigate } from "react-router-dom";
 
-const COUNTS = [5, 10, 20, 30, 40, 50];
+const COUNTS = [1,5, 10, 20, 30, 40, 50];
 
 export default function GenerateQuizTab() {
   const [url, setUrl] = useState("");
@@ -99,7 +99,7 @@ export default function GenerateQuizTab() {
           onChange={(e) => setCount(Number(e.target.value))}
         >
           {COUNTS.map((n) => (
-            <option key={n} value={n}>
+            <option key={n} value={n} className="cursor-pointer">
               {n}
             </option>
           ))}

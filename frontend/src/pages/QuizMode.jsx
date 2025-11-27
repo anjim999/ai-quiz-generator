@@ -4,6 +4,8 @@ import Timer from "../components/Timer";
 import AntiTabSwitch from "../components/AntiTabSwitch";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import api from "../api/axiosClient"; // ✅ NEW: use authenticated axios client
+import { submitAttempt } from "../services/api";
 
 export default function QuizMode() {
   const nav = useNavigate();
@@ -22,7 +24,12 @@ export default function QuizMode() {
   const startTimeRef = useRef(Date.now());
   const camRef = useRef(null);
 
-  if (!active) return <div className="h-[60vh] grid place-items-center text-xl">No active quiz!</div>;
+  if (!active)
+    return (
+      <div className="h-[60vh] grid place-items-center text-xl">
+        No active quiz!
+      </div>
+    );
 
   const count = active.quiz.length;
   const totalSeconds = count * 60;
@@ -31,7 +38,11 @@ export default function QuizMode() {
   function scoreNow() {
     let s = 0;
     active.quiz.forEach((q, i) => {
-      if (answersRef.current[i] !== undefined && q.options[answersRef.current[i]] === q.answer) s++;
+      if (
+        answersRef.current[i] !== undefined &&
+        q.options[answersRef.current[i]] === q.answer
+      )
+        s++;
     });
     return s;
   }
@@ -39,46 +50,59 @@ export default function QuizMode() {
   // ✅ Stop camera safely
   function stopCamera() {
     try {
-      camRef.current?.getTracks().forEach(t => t.stop());
+      camRef.current?.getTracks().forEach((t) => t.stop());
     } catch {}
   }
 
   // ✅ Submit exam
   async function submitExam(auto = false) {
-    if (submitted) return;
-    setSubmitted(true);
+  if (submitted) return;
+  setSubmitted(true);
 
-    stopCamera();
-    try { if (document.fullscreenElement) await document.exitFullscreen(); } catch {}
+  stopCamera();
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+  } catch {}
 
-    const usedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
-    const score = scoreNow();
+  const usedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+  const score = scoreNow();
 
-    await fetch(`${import.meta.env.VITE_API_URL}/submit_attempt/${active.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        answers: answersRef.current,
-        score,
-        time_taken_seconds: usedTime,
-        total_time: totalSeconds,
-        total_questions: count,
-        auto_submitted: auto
-      })
-    }).catch(() => toast.error("Server save failed, but exam ended"));
+  try {
+    const res = await submitAttempt(active.id, {
+      answers: answersRef.current,
+      score,
+      time_taken_seconds: usedTime,
+      total_time: totalSeconds,
+      total_questions: count,
+      auto_submitted: auto,
+    });
 
-    toast.success(`Submitted! Score: ${score}/${count}`);
-setTimeout(() => {
-  localStorage.setItem("lastResult", JSON.stringify({
-    quizId: active.id,
-    score,
-    usedTime,
-    totalSeconds,
-    count
-  }));
-  nav("/result");
-}, 900);
+    console.log("Submit attempt response:", res);
+
+    if (!res?.saved) {
+      toast.error("Server did not confirm save, but exam was ended.");
+    } else {
+      toast.success(`Submitted! Score: ${score}/${count}`);
+    }
+  } catch (err) {
+    console.error("Submit attempt failed:", err);
+    toast.error("Server save failed, but exam ended");
   }
+
+  setTimeout(() => {
+    localStorage.setItem(
+      "lastResult",
+      JSON.stringify({
+        quizId: active.id,
+        score,
+        usedTime,
+        totalSeconds,
+        count,
+      })
+    );
+    nav("/result");
+  }, 900);
+}
 
   // ✅ Handle violation counting
   function addStrike(type) {
@@ -95,7 +119,12 @@ setTimeout(() => {
     toast.warn(`Violation ${total}/3`);
 
     // ✅ RULES:
-    if (newFs >= 3 || newTab >= 3 || (newFs >= 1 && newTab >= 1) || total >= 3) {
+    if (
+      newFs >= 3 ||
+      newTab >= 3 ||
+      (newFs >= 1 && newTab >= 1) ||
+      total >= 3
+    ) {
       toast.error("Security violated. Auto-submitting.");
       setTimeout(() => submitExam(true), 400);
     }
@@ -121,13 +150,20 @@ setTimeout(() => {
     // Block refresh + devtools
     const keyBlock = (e) => {
       const k = e.key.toLowerCase();
-      if (k === "f5" || (e.ctrlKey && k === "r")) { e.preventDefault(); toast.warn("Refresh disabled"); }
-      if (k === "f12" || (e.ctrlKey && e.shiftKey && ["i","j","c"].includes(k))) {
-        e.preventDefault(); toast.warn("Devtools disabled");
+      if (k === "f5" || (e.ctrlKey && k === "r")) {
+        e.preventDefault();
+        toast.warn("Refresh disabled");
+      }
+      if (
+        k === "f12" ||
+        (e.ctrlKey && e.shiftKey && ["i", "j", "c"].includes(k))
+      ) {
+        e.preventDefault();
+        toast.warn("Devtools disabled");
       }
     };
 
-    const noContext = e => e.preventDefault();
+    const noContext = (e) => e.preventDefault();
 
     document.addEventListener("keydown", keyBlock);
     window.addEventListener("contextmenu", noContext);
@@ -160,7 +196,9 @@ setTimeout(() => {
       <div className="flex justify-between mb-4">
         <div>
           <h2 className="font-semibold">{active.title}</h2>
-          <p className="text-sm text-red-600">Violations: {fsExitCount + tabSwitchCount}/3</p>
+          <p className="text-sm text-red-600">
+            Violations: {fsExitCount + tabSwitchCount}/3
+          </p>
         </div>
         <Timer totalSeconds={totalSeconds} onEnd={() => submitExam(true)} />
       </div>
@@ -171,11 +209,16 @@ setTimeout(() => {
       <ol className="space-y-4">
         {active.quiz.map((q, i) => (
           <li key={i} className="border p-4 rounded">
-            <p className="font-medium mb-2">{i + 1}. {q.question}</p>
+            <p className="font-medium mb-2">
+              {i + 1}. {q.question}
+            </p>
             {q.options.map((opt, j) => (
-              <label key={j} className={`block border p-2 rounded cursor-pointer ${
-                answers[i] === j ? "border-blue-600" : "border-gray-300"
-              }`}>
+              <label
+                key={j}
+                className={`block border p-2 rounded cursor-pointer ${
+                  answers[i] === j ? "border-blue-600" : "border-gray-300"
+                }`}
+              >
                 <input
                   type="radio"
                   name={`q${i}`}
@@ -193,7 +236,11 @@ setTimeout(() => {
         ))}
       </ol>
 
-      <button className="btn btn-primary mt-4 cursor-pointer" onClick={() => submitExam(false)} disabled={submitted}>
+      <button
+        className="btn btn-primary mt-4 cursor-pointer"
+        onClick={() => submitExam(false)}
+        disabled={submitted}
+      >
         Submit Exam
       </button>
 

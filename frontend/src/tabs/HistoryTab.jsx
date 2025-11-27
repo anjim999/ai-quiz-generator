@@ -5,7 +5,7 @@ import HistoryTable from "../components/HistoryTable";
 import Modal from "../components/Modal";
 import ScoreCard from "../components/ScoreCard";
 import QuizDetails from "../components/QuizDetails";
-
+import Navbar from "../components/Navbar";
 export default function HistoryTab() {
   const [rows, setRows] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
@@ -30,6 +30,8 @@ export default function HistoryTab() {
   }
 
   return (
+    <>
+    <Navbar/>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Past Quizzes</h3>
@@ -46,5 +48,6 @@ export default function HistoryTab() {
         assignmentDetails={<QuizDetails data={selectedQuiz} />}
       />
     </div>
+      </>
   );
 }
