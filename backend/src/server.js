@@ -11,7 +11,7 @@ import { PORT } from "./config/env.js";
 
 const app = express();
 
-const whitelist = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+const whitelist = ['http://localhost:5173', 'https://ai-quiz-generator-mern.vercel.app/'];
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || whitelist.indexOf(origin) !== -1) {
