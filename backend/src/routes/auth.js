@@ -11,7 +11,7 @@ import { OAuth2Client } from 'google-auth-library';
 
 const router = express.Router();
 
-// ✅ Google client (only if configured)
+// ✅ Google OAuth client
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 const validate = (rules) => [
@@ -28,7 +28,8 @@ const validate = (rules) => [
 
 const normalizeEmail = (email = '') => email.trim().toLowerCase();
 
-// ======================= REGISTER – STEP 1 =======================
+/* ======================= REGISTER – STEP 1 ======================= */
+
 router.post('/register-request-otp', async (req, res) => {
   try {
     const rawEmail = req.body.email || '';
@@ -66,7 +67,8 @@ router.post('/register-request-otp', async (req, res) => {
   }
 });
 
-// ======================= REGISTER – STEP 2 =======================
+/* ======================= REGISTER – STEP 2 ======================= */
+
 router.post(
   '/register-verify',
   validate([
@@ -141,7 +143,8 @@ router.post(
   }
 );
 
-// ============================ LOGIN ============================
+/* ============================ LOGIN ============================ */
+
 router.post(
   '/login',
   validate([
@@ -191,6 +194,7 @@ router.post(
           name: user.name,
           email: user.email,
           role,
+          avatar: user.avatar || null,
         },
       });
     } catch (err) {
@@ -200,7 +204,8 @@ router.post(
   }
 );
 
-// =================== FORGOT PASSWORD – STEP 1 ===================
+/* =================== FORGOT PASSWORD – STEP 1 =================== */
+
 router.post(
   '/forgot-password-request',
   validate([body('email').isEmail()]),
@@ -251,7 +256,8 @@ router.post(
   }
 );
 
-// =================== FORGOT PASSWORD – STEP 2 ===================
+/* =================== FORGOT PASSWORD – STEP 2 =================== */
+
 router.post(
   '/forgot-password-verify',
   validate([
@@ -308,12 +314,11 @@ router.post(
   }
 );
 
-// ========================== GOOGLE LOGIN ==========================
+/* ========================== GOOGLE LOGIN ========================== */
+
 router.post('/google', async (req, res) => {
   try {
     const { idToken, credential } = req.body || {};
-
-    // Frontend may send idToken or credential (Google One Tap)
     const token = idToken || credential;
 
     if (!token) {
@@ -337,11 +342,11 @@ router.post('/google', async (req, res) => {
 
     const payload = ticket.getPayload();
 
-    const googleId = payload.sub; // not stored, just for dummy password
+    const googleId = payload.sub;
     const rawEmail = payload.email || '';
     const email = normalizeEmail(rawEmail);
     const name = payload.name || email;
-    const avatar = payload.picture || null; // used only in response
+    const avatar = payload.picture || null;
 
     if (!email) {
       return res.status(400).json({
@@ -349,27 +354,42 @@ router.post('/google', async (req, res) => {
       });
     }
 
-    // Look up existing user by email
-    const { rows } = await query('SELECT * FROM users WHERE email = $1', [
-      email,
-    ]);
+    // Find existing user by email or google_id
+    const { rows } = await query(
+      'SELECT * FROM users WHERE email = $1 OR google_id = $2',
+      [email, googleId]
+    );
 
     let user = rows[0];
 
     if (!user) {
-      // New user → create a random-ish password just to satisfy NOT NULL
+      // New user → insert with google_id + avatar
       const dummyPassword = bcrypt.hashSync(googleId + JWT_SECRET, 10);
 
       const insertRes = await query(
-        `INSERT INTO users (name, email, password, role, is_verified)
-         VALUES ($1, $2, $3, $4, TRUE)
-         RETURNING id, name, email, role`,
-        [name, email, dummyPassword, 'user']
+        `INSERT INTO users (name, email, password, role, is_verified, google_id, avatar)
+         VALUES ($1, $2, $3, $4, TRUE, $5, $6)
+         RETURNING id, name, email, role, avatar, google_id`,
+        [name, email, dummyPassword, 'user', googleId, avatar]
       );
 
       user = insertRes.rows[0];
       console.log('Google login created new user:', email);
     } else {
+      // Existing user → make sure google_id / avatar are stored/updated
+      const newGoogleId = user.google_id || googleId;
+      const newAvatar = avatar || user.avatar || null;
+
+      await query(
+        `UPDATE users
+           SET google_id = $1,
+               avatar = $2
+         WHERE id = $3`,
+        [newGoogleId, newAvatar, user.id]
+      );
+
+      user.google_id = newGoogleId;
+      user.avatar = newAvatar;
       console.log('Google login successful for existing user:', email);
     }
 
@@ -394,8 +414,8 @@ router.post('/google', async (req, res) => {
         name: user.name,
         email: user.email,
         role,
-        // avatar is not stored in DB; we just send the Google avatar for UI use
-        avatar,
+        avatar: user.avatar || avatar || null,
+        google_id: user.google_id || googleId,
       },
     });
   } catch (err) {
