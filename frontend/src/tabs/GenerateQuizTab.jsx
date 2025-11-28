@@ -75,7 +75,7 @@ export default function GenerateQuizTab() {
       localStorage.setItem("activeQuiz", JSON.stringify(res));
     } catch (err) {
       console.error("Quiz generation failed:", err);
-      alert("Quiz generation failed");
+      alert(`Quiz generation failed: ${err.message}`);
     } finally {
       setLoading(false);
     }

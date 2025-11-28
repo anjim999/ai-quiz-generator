@@ -121,9 +121,9 @@ router.post(
       const role = user.role || 'user';
 
       const token = jwt.sign(
-        { userId: user.id, email: user.email, name: user.name, role },
+        { userId: user.id, email: user.email, name: user.name, role: user.role },
         JWT_SECRET,
-        { expiresIn: '1d' }
+        { expiresIn: '30d' }
       );
 
       return res.json({
@@ -403,7 +403,7 @@ router.post('/google', async (req, res) => {
     };
 
     const jwtToken = jwt.sign(jwtPayload, JWT_SECRET, {
-      expiresIn: '1d',
+      expiresIn: '30d',
     });
 
     return res.json({

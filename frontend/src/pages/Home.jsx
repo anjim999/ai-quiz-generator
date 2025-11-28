@@ -7,7 +7,7 @@ export default function Home() {
     
            <Navbar/> 
 
-    <div className="max-w-3xl mx-auto text-center pt-12">
+    <div className="max-w-3xl mx-auto text-center pt-12 mt-9">
       <img
         src="https://i.pravatar.cc/120"
         className="mx-auto rounded-full shadow mb-6"

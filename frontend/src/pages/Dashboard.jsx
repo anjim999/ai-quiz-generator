@@ -7,8 +7,10 @@ const Dashboard=()=> {
   const [tab, setTab] = useState("generate");
 
   return (
+    <>
+    <Navbar/>
     <div className="max-w-5xl mx-auto py-8 px-4">
-      <Navbar/>
+      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">AI Wiki Quiz Dashboard</h1>
         {/* <Link to="/" className="btn btn-ghost focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
@@ -39,6 +41,7 @@ const Dashboard=()=> {
       </footer> */}
 
     </div>
+    </>
   );
 }
 

@@ -29,7 +29,14 @@ export async function generateQuiz(url, forceRefresh = false, count = 10) {
     body: JSON.stringify({ url, force_refresh: forceRefresh }),
   });
 
-  if (!res.ok) throw new Error("Failed to generate quiz");
+  if (!res.ok) {
+    const text = await res.text().catch(() => "Unknown error");
+    const status = res.status;
+    if (status === 401) {
+      throw new Error("Unauthorized: Your session may have expired. Please log in again.");
+    }
+    throw new Error(`Quiz generation failed (${status}): ${text}`);
+  }
   return res.json();
 }
 
@@ -37,7 +44,13 @@ export async function fetchHistory() {
   const res = await fetch(`${BASE}/api/quiz/history`, {
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error("Failed to load history");
+  if (!res.ok) {
+    const status = res.status;
+    if (status === 401) {
+      throw new Error("Your session expired. Please log in again.");
+    }
+    throw new Error(`Failed to load history (${status})`);
+  }
   return res.json();
 }
 
@@ -45,7 +58,13 @@ export async function fetchQuizById(id) {
   const res = await fetch(`${BASE}/api/quiz/quiz/${id}`, {
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error("Quiz not found");
+  if (!res.ok) {
+    const status = res.status;
+    if (status === 401) {
+      throw new Error("Your session expired. Please log in again.");
+    }
+    throw new Error(`Quiz not found (${status})`);
+  }
   return res.json();
 }
 

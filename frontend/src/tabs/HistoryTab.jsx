@@ -13,20 +13,30 @@ export default function HistoryTab() {
   const [lastResult, setLastResult] = useState(null);
 
   async function load() {
-    const res = await fetchHistory();
-    setRows(res.items || []);
+    try {
+      const res = await fetchHistory();
+      setRows(res.items || []);
+    } catch (err) {
+      console.error("Failed to load history:", err);
+      alert(`Failed to load history: ${err.message}`);
+    }
   }
 
   useEffect(() => { load(); }, []);
 
   async function handleDetails(id) {
-    const data = await fetchQuizById(id);
-    setSelectedQuiz(data);
-    setOpen(true);
+    try {
+      const data = await fetchQuizById(id);
+      setSelectedQuiz(data);
+      setOpen(true);
 
-    // fetch only if last result belongs to same quiz
-    const saved = JSON.parse(localStorage.getItem("lastResult"));
-    setLastResult(saved && saved.quizId === id ? saved : null);
+      // fetch only if last result belongs to same quiz
+      const saved = JSON.parse(localStorage.getItem("lastResult"));
+      setLastResult(saved && saved.quizId === id ? saved : null);
+    } catch (err) {
+      console.error("Failed to load quiz details:", err);
+      alert(`Failed to load quiz: ${err.message}`);
+    }
   }
 
   return (

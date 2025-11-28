@@ -4,7 +4,7 @@ import Timer from "../components/Timer";
 import AntiTabSwitch from "../components/AntiTabSwitch";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import api from "../api/axiosClient"; // ✅ NEW: use authenticated axios client
+import api from "../api/axiosClient"; 
 import { submitAttempt } from "../services/api";
 
 export default function QuizMode() {
@@ -34,7 +34,6 @@ export default function QuizMode() {
   const count = active.quiz.length;
   const totalSeconds = count * 60;
 
-  // ✅ Score calculator
   function scoreNow() {
     let s = 0;
     active.quiz.forEach((q, i) => {
@@ -47,14 +46,12 @@ export default function QuizMode() {
     return s;
   }
 
-  // ✅ Stop camera safely
   function stopCamera() {
     try {
       camRef.current?.getTracks().forEach((t) => t.stop());
     } catch {}
   }
 
-  // ✅ Submit exam
   async function submitExam(auto = false) {
   if (submitted) return;
   setSubmitted(true);
@@ -104,7 +101,6 @@ export default function QuizMode() {
   }, 900);
 }
 
-  // ✅ Handle violation counting
   function addStrike(type) {
     if (submitted) return;
 
@@ -118,7 +114,6 @@ export default function QuizMode() {
 
     toast.warn(`Violation ${total}/3`);
 
-    // ✅ RULES:
     if (
       newFs >= 3 ||
       newTab >= 3 ||
@@ -130,7 +125,6 @@ export default function QuizMode() {
     }
   }
 
-  // ✅ Mount only once: start webcam + fullscreen + block keys
   useEffect(() => {
     const start = async () => {
       try {
@@ -147,7 +141,6 @@ export default function QuizMode() {
       }
     };
 
-    // Block refresh + devtools
     const keyBlock = (e) => {
       const k = e.key.toLowerCase();
       if (k === "f5" || (e.ctrlKey && k === "r")) {
@@ -177,7 +170,6 @@ export default function QuizMode() {
     };
   }, []);
 
-  // ✅ Detect exit fullscreen
   useEffect(() => {
     const handleFS = () => {
       if (!document.fullscreenElement && !submitted) {
@@ -203,7 +195,6 @@ export default function QuizMode() {
         <Timer totalSeconds={totalSeconds} onEnd={() => submitExam(true)} />
       </div>
 
-      {/* ✅ Tab switch detector */}
       <AntiTabSwitch onStrike={() => addStrike("tab")} maxStrikes={3} />
 
       <ol className="space-y-4">
@@ -244,7 +235,6 @@ export default function QuizMode() {
         Submit Exam
       </button>
 
-      {/* ✅ Fullscreen Exit Modal */}
       {isFsModal && !submitted && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
           <div className="bg-white p-6 rounded shadow text-center space-y-4">
