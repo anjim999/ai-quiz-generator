@@ -178,7 +178,7 @@ router.post(
           role,
         },
         JWT_SECRET,
-        { expiresIn: '1d' }
+        { expiresIn: '30d' }
       );
 
       console.log('Login successful for', email);
@@ -354,7 +354,6 @@ router.post('/google', async (req, res) => {
     let user = rows[0];
 
     if (!user) {
-      // New user → insert with google_id + avatar
       const dummyPassword = bcrypt.hashSync(googleId + JWT_SECRET, 10);
 
       const insertRes = await query(
@@ -367,7 +366,6 @@ router.post('/google', async (req, res) => {
       user = insertRes.rows[0];
       console.log('Google login created new user:', email);
     } else {
-      // Existing user → make sure google_id / avatar are stored/updated
       const newGoogleId = user.google_id || googleId;
       const newAvatar = avatar || user.avatar || null;
 

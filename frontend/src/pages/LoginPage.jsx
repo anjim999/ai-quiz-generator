@@ -20,7 +20,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Load Google Identity Services script
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) {
       console.warn(
