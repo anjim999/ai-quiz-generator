@@ -5,15 +5,14 @@ import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
 import { query } from '../db/pool.js';
 import { generateOtp, getExpiry } from '../utils/otp.js';
-import { JWT_SECRET,GOOGLE_CLIENT_ID } from '../config/env.js';
+import { JWT_SECRET, GOOGLE_CLIENT_ID } from '../config/env.js';
 import { sendOtpEmail } from '../utils/mailer.js';
-const { OAuth2Client } = require("google-auth-library");
+import { OAuth2Client } from 'google-auth-library';
 
 const router = express.Router();
 
-const googleClient = GOOGLE_CLIENT_ID
-  ? new OAuth2Client(GOOGLE_CLIENT_ID)
-  : null;
+// ✅ Google client (only if configured)
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 const validate = (rules) => [
   ...rules,
@@ -29,7 +28,7 @@ const validate = (rules) => [
 
 const normalizeEmail = (email = '') => email.trim().toLowerCase();
 
-// REGISTER – STEP 1: request OTP
+// ======================= REGISTER – STEP 1 =======================
 router.post('/register-request-otp', async (req, res) => {
   try {
     const rawEmail = req.body.email || '';
@@ -61,13 +60,13 @@ router.post('/register-request-otp', async (req, res) => {
         "OTP generated. If email doesn't arrive, use the OTP from server logs.",
       devOtp: process.env.NODE_ENV !== 'production' ? code : undefined,
     });
-  } catch (err) { 
+  } catch (err) {
     console.error('Error in /register-request-otp:', err);
-    return res.status(500).json({ err });
+    return res.status(500).json({ message: 'Failed to generate OTP' });
   }
 });
 
-// REGISTER – STEP 2: verify OTP and create user
+// ======================= REGISTER – STEP 2 =======================
 router.post(
   '/register-verify',
   validate([
@@ -142,7 +141,7 @@ router.post(
   }
 );
 
-// LOGIN
+// ============================ LOGIN ============================
 router.post(
   '/login',
   validate([
@@ -201,7 +200,7 @@ router.post(
   }
 );
 
-// FORGOT PASSWORD – STEP 1: request OTP
+// =================== FORGOT PASSWORD – STEP 1 ===================
 router.post(
   '/forgot-password-request',
   validate([body('email').isEmail()]),
@@ -252,7 +251,7 @@ router.post(
   }
 );
 
-// FORGOT PASSWORD – STEP 2: verify + change password
+// =================== FORGOT PASSWORD – STEP 2 ===================
 router.post(
   '/forgot-password-verify',
   validate([
@@ -309,24 +308,25 @@ router.post(
   }
 );
 
-router.post("/google", async (req, res) => {
+// ========================== GOOGLE LOGIN ==========================
+router.post('/google', async (req, res) => {
   try {
     const { idToken, credential } = req.body || {};
 
-    // Accept either "idToken" or "credential" from frontend
+    // Frontend may send idToken or credential (Google One Tap)
     const token = idToken || credential;
 
     if (!token) {
       return res
         .status(400)
-        .json({ message: "idToken (or credential) is required" });
+        .json({ message: 'idToken (or credential) is required' });
     }
 
     if (!googleClient || !GOOGLE_CLIENT_ID) {
-      console.error("Google auth not configured on server.");
-      return res
-        .status(500)
-        .json({ message: "Google login is not configured on server." });
+      console.error('Google auth not configured on server.');
+      return res.status(500).json({
+        message: 'Google login is not configured on server.',
+      });
     }
 
     // Verify ID token with Google
@@ -337,102 +337,70 @@ router.post("/google", async (req, res) => {
 
     const payload = ticket.getPayload();
 
-    const googleId = payload.sub;
-    const rawEmail = payload.email || "";
+    const googleId = payload.sub; // not stored, just for dummy password
+    const rawEmail = payload.email || '';
     const email = normalizeEmail(rawEmail);
     const name = payload.name || email;
-    const avatar = payload.picture || null;
+    const avatar = payload.picture || null; // used only in response
 
     if (!email) {
-      return res
-        .status(400)
-        .json({ message: "Google account does not have a valid email." });
+      return res.status(400).json({
+        message: 'Google account does not have a valid email.',
+      });
     }
 
-    // TC: O(1) average lookup by email
-    db.get(
-      "SELECT * FROM users WHERE email = ?",
-      [email],
-      (err, userRow) => {
-        if (err) {
-          console.error("DB error on Google login:", err);
-          return res.status(500).json({ message: "DB error" });
-        }
+    // Look up existing user by email
+    const { rows } = await query('SELECT * FROM users WHERE email = $1', [
+      email,
+    ]);
 
-        if (userRow) {
-          // Existing user: log them in
-          const role = userRow.role || "user";
+    let user = rows[0];
 
-          const jwtPayload = {
-            userId: userRow.id,
-            email: userRow.email,
-            name: userRow.name,
-            role,
-          };
+    if (!user) {
+      // New user → create a random-ish password just to satisfy NOT NULL
+      const dummyPassword = bcrypt.hashSync(googleId + JWT_SECRET, 10);
 
-          const token = jwt.sign(jwtPayload, JWT_SECRET, {
-            expiresIn: "1d",
-          });
+      const insertRes = await query(
+        `INSERT INTO users (name, email, password, role, is_verified)
+         VALUES ($1, $2, $3, $4, TRUE)
+         RETURNING id, name, email, role`,
+        [name, email, dummyPassword, 'user']
+      );
 
-          console.log("Google login successful for existing user:", email);
+      user = insertRes.rows[0];
+      console.log('Google login created new user:', email);
+    } else {
+      console.log('Google login successful for existing user:', email);
+    }
 
-          return res.json({
-            message: "Login successful",
-            token,
-            user: {
-              id: userRow.id,
-              name: userRow.name,
-              email: userRow.email,
-              role,
-              avatar: userRow.avatar || avatar || null,
-            },
-          });
-        }
+    const role = user.role || 'user';
 
-        // New user: create a record
-        const createdAt = new Date().toISOString();
-        const role = "user";
+    const jwtPayload = {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      role,
+    };
 
-        // Dummy password to satisfy NOT NULL constraint
-        const dummyPassword = bcrypt.hashSync(googleId + JWT_SECRET, 10);
+    const jwtToken = jwt.sign(jwtPayload, JWT_SECRET, {
+      expiresIn: '1d',
+    });
 
-        db.run(
-          "INSERT INTO users (name, email, password, role, is_verified, created_at, google_id, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-          [name, email, dummyPassword, role, 1, createdAt, googleId, avatar],
-          function (err2) {
-            if (err2) {
-              console.error("DB error inserting Google user:", err2);
-              return res.status(500).json({ message: "DB error" });
-            }
-
-            const userId = this.lastID;
-
-            const jwtPayload = { userId, email, name, role };
-
-            const token = jwt.sign(jwtPayload, JWT_SECRET, {
-              expiresIn: "1d",
-            });
-
-            console.log("Google login created new user:", email);
-
-            return res.json({
-              message: "Login successful",
-              token,
-              user: {
-                id: userId,
-                name,
-                email,
-                role,
-                avatar,
-              },
-            });
-          }
-        );
-      }
-    );
+    return res.json({
+      message: 'Login successful',
+      token: jwtToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role,
+        // avatar is not stored in DB; we just send the Google avatar for UI use
+        avatar,
+      },
+    });
   } catch (err) {
-    console.error("Error in /api/auth/google:", err);
-    return res.status(401).json({ message: "Invalid Google token" });
+    console.error('Error in /api/auth/google:', err);
+    return res.status(401).json({ message: 'Invalid Google token' });
   }
 });
 
