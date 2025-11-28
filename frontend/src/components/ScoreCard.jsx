@@ -72,7 +72,6 @@ export default function ScoreCard({ data }) {
         </div>
       </div>
 
-      {/* PDF Button */}
       <button className="cursor-pointer btn btn-primary w-full" onClick={downloadPDF}>
         Download PDF
       </button>

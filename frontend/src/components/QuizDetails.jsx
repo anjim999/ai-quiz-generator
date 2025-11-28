@@ -4,7 +4,6 @@ export default function QuizDetails({ data, takeMode = false }) {
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
-  // Load saved answers from lastResult in history mode
   useEffect(() => {
     if (!takeMode) {
       const result = JSON.parse(localStorage.getItem("lastResult")) || {};
@@ -60,13 +59,11 @@ export default function QuizDetails({ data, takeMode = false }) {
                 <p className="font-medium">{idx + 1}. {q.question}</p>
               </div>
 
-              {/* Options */}
               <div className="mt-2 grid gap-2">
                 {q.options.map((opt, i) => {
                   const id = `q${idx}-opt${i}`;
                   const checked = answers[idx] === opt;
 
-                  // Apply green or red only to user's chosen option
                   const colorClass = !takeMode
   ? checked
     ? opt === q.answer
@@ -101,7 +98,6 @@ export default function QuizDetails({ data, takeMode = false }) {
                 })}
               </div>
 
-              {/* Always show correct + explanation when submitted or viewing history */}
               {submitted && (
                 <div className="mt-3 bg-gray-50 p-3 rounded border text-sm">
                   <p><b>Ans:</b> {q.answer}</p>

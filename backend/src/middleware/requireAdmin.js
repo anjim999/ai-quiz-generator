@@ -1,6 +1,5 @@
 // backend/src/middleware/requireAdmin.js
 let requireAdmin;
-
 if (process.env.NODE_ENV === 'test') {
   requireAdmin = function (req, _res, next) {
     if (!req.user) {
