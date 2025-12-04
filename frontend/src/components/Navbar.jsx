@@ -10,7 +10,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const { auth, logout } = useAuth(); 
-  const user = auth?.user; // ✅ FIXED (correct user extraction)
+  const user = auth?.user; 
 
   const active = (p) =>
     pathname === p || pathname.startsWith(p)
@@ -35,7 +35,7 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setShowLogout(false);
-    navigate("/login"); // ✅ Redirect to login
+    navigate("/login"); 
   };
 
   useEffect(() => {
@@ -57,7 +57,6 @@ export default function Navbar() {
     <nav className="bg-white/70 backdrop-blur-md shadow-sm fixed top-0 left-0 right-0 z-40">
       <div className="flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8">
 
-        {/* Logo */}
         <Link className={`hover:text-blue-600 transition ${active("/")}`} to="/">
           <div className="flex items-center gap-2">
             <img
@@ -71,7 +70,6 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Right side */}
         <div className="flex items-center gap-6 sm:gap-8">
           <Link className={`hover:text-blue-600 transition ${active("/")}`} to="/">
             Home
@@ -84,7 +82,6 @@ export default function Navbar() {
             Dashboard
           </Link>
 
-          {/* Profile dropdown */}
           {auth ? (
             <div
               className="relative"

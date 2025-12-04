@@ -124,12 +124,10 @@ export default function LoginPage() {
         },
       });
 
-      // Show Google One Tap or account chooser
       window.google.accounts.id.prompt((notification) => {
         const notDisplayed = notification.isNotDisplayed?.();
         const skipped = notification.isSkippedMoment?.();
         if (notDisplayed || skipped) {
-          // User closed / blocked / not shown
           setGoogleLoading(false);
         }
       });
@@ -197,14 +195,12 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Divider */}
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-gray-200" />
           <span className="text-xs text-gray-400">OR</span>
           <div className="h-px flex-1 bg-gray-200" />
         </div>
 
-        {/* Google Login Button */}
         <button
           type="button"
           onClick={handleGoogleLogin}
