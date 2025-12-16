@@ -40,13 +40,11 @@ export async function initDb() {
   `;
 
   try {
-    console.log("🛠️ Applying DB schema...");
-    // Use retry wrapper for init since cloud DBs sometimes drop connections during cold starts
+    console.log("Applying DB schema...");
     await queryWithRetry(schema, [], 3, 200);
-    console.log("✅ Database ready");
+    console.log("Database ready");
   } catch (err) {
-    // Re-throw after logging so callers (startup) can decide whether to exit
-    console.error("❌ DB init error:", err && err.stack ? err.stack : err);
+    console.error("DB init error:", err && err.stack ? err.stack : err);
     throw err;
   }
   // 1. Users table
@@ -93,7 +91,7 @@ export async function initDb() {
     `
   );
 
-  console.log('✅ DB schema ready');
+  console.log('DB schema ready');
 }
 
   
