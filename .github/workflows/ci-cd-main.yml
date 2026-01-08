@@ -33,6 +33,9 @@ jobs:
       
       # Basic Syntax Check to ensure no major errors
       - name: Type Check & Verify
+        env: 
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummydb"
+          JWT_SECRET: "dummy-secret-for-ci-testing-only"
         run: |
           # Just importing main to ensure no static import errors
           python -c "import src.main; print('Backend imports successfully!')"
