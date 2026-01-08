@@ -186,8 +186,24 @@ export default function QuizMode() {
     };
   }, []);
 
+  /* 
+   * Grace period to prevent false positives during initial setup 
+   * (camera permission prompt, fullscreen transition)
+   */
+  const gracePeriodRef = useRef(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      gracePeriodRef.current = false;
+    }, 4000); // 4 seconds grace period
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const handleFS = () => {
+      // Ignore during grace period
+      if (gracePeriodRef.current) return;
+
       if (!document.fullscreenElement && !submitted) {
         setIsFsModal(true);
         addStrike("fs");
