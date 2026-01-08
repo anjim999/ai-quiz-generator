@@ -1,0 +1,28 @@
+# Sample Wikipedia URLs for Testing
+
+# These URLs have been tested with the AI Quiz Generator
+
+# Historical Figures
+https://en.wikipedia.org/wiki/Alan_Turing
+https://en.wikipedia.org/wiki/Albert_Einstein
+https://en.wikipedia.org/wiki/Marie_Curie
+https://en.wikipedia.org/wiki/Leonardo_da_Vinci
+
+# Science & Technology
+https://en.wikipedia.org/wiki/Artificial_intelligence
+https://en.wikipedia.org/wiki/Machine_learning
+https://en.wikipedia.org/wiki/Python_(programming_language)
+https://en.wikipedia.org/wiki/Internet
+
+# History
+https://en.wikipedia.org/wiki/World_War_II
+https://en.wikipedia.org/wiki/Ancient_Egypt
+https://en.wikipedia.org/wiki/Roman_Empire
+
+# Geography
+https://en.wikipedia.org/wiki/Mount_Everest
+https://en.wikipedia.org/wiki/Amazon_rainforest
+
+# Culture
+https://en.wikipedia.org/wiki/The_Beatles
+https://en.wikipedia.org/wiki/William_Shakespeare

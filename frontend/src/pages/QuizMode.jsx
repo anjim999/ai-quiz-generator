@@ -1,11 +1,18 @@
+// src/pages/QuizMode.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Timer from "../components/Timer";
 import AntiTabSwitch from "../components/AntiTabSwitch";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import api from "../api/axiosClient"; 
 import { submitAttempt } from "../services/api";
+import {
+  FaExclamationTriangle,
+  FaCheck,
+  FaExpand,
+  FaClock,
+  FaShieldAlt
+} from "react-icons/fa";
 
 export default function QuizMode() {
   const nav = useNavigate();
@@ -20,19 +27,29 @@ export default function QuizMode() {
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [isFsModal, setIsFsModal] = useState(false);
   const [answers, setAnswers] = useState({});
+  const [currentQuestion, setCurrentQuestion] = useState(0);
   const answersRef = useRef(answers);
   const startTimeRef = useRef(Date.now());
   const camRef = useRef(null);
 
   if (!active)
     return (
-      <div className="h-[60vh] grid place-items-center text-xl">
-        No active quiz!
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="card card-body text-center max-w-md">
+          <FaExclamationTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-heading text-slate-900 mb-2">No Active Quiz</h2>
+          <p className="text-body mb-6">Please generate a quiz first from the dashboard.</p>
+          <button onClick={() => nav("/dashboard")} className="btn btn-primary">
+            Go to Dashboard
+          </button>
+        </div>
       </div>
     );
 
   const count = active.quiz.length;
   const totalSeconds = count * 60;
+  const answeredCount = Object.keys(answers).length;
+  const progress = (answeredCount / count) * 100;
 
   function scoreNow() {
     let s = 0;
@@ -49,57 +66,65 @@ export default function QuizMode() {
   function stopCamera() {
     try {
       camRef.current?.getTracks().forEach((t) => t.stop());
-    } catch {}
+    } catch { }
   }
 
   async function submitExam(auto = false) {
-  if (submitted) return;
-  setSubmitted(true);
+    if (submitted) return;
+    setSubmitted(true);
 
-  stopCamera();
-  try {
-    if (document.fullscreenElement) await document.exitFullscreen();
-  } catch {}
+    stopCamera();
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch { }
 
-  const usedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
-  const score = scoreNow();
+    const usedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    const score = scoreNow();
 
-  try {
-    const res = await submitAttempt(active.id, {
-      answers: answersRef.current,
-      score,
-      time_taken_seconds: usedTime,
-      total_time: totalSeconds,
-      total_questions: count,
-      auto_submitted: auto,
+    // Convert answers from {index: optionIndex} to {index: answerText}
+    const formattedAnswers = {};
+    active.quiz.forEach((q, i) => {
+      const selectedOptionIndex = answersRef.current[i];
+      formattedAnswers[String(i)] = selectedOptionIndex !== undefined
+        ? q.options[selectedOptionIndex]
+        : "";
     });
 
-    console.log("Submit attempt response:", res);
-
-    if (!res?.saved) {
-      toast.error("Server did not confirm save, but exam was ended.");
-    } else {
-      toast.success(`Submitted! Score: ${score}/${count}`);
-    }
-  } catch (err) {
-    console.error("Submit attempt failed:", err);
-    toast.error("Server save failed, but exam ended");
-  }
-
-  setTimeout(() => {
-    localStorage.setItem(
-      "lastResult",
-      JSON.stringify({
-        quizId: active.id,
+    try {
+      const res = await submitAttempt(active.id, {
+        answers: formattedAnswers,
         score,
-        usedTime,
-        totalSeconds,
-        count,
-      })
-    );
-    nav("/result");
-  }, 900);
-}
+        time_taken_seconds: usedTime,
+        total_time: totalSeconds,
+        total_questions: count,
+        auto_submitted: auto,
+      });
+
+      if (!res?.saved) {
+        toast.error("Server did not confirm save");
+      } else {
+        toast.success(`Submitted! Score: ${score}/${count}`);
+      }
+    } catch (err) {
+      console.error("Submit attempt failed:", err);
+      toast.error("Server save failed");
+    }
+
+    setTimeout(() => {
+      localStorage.setItem(
+        "lastResult",
+        JSON.stringify({
+          quizId: active.id,
+          score,
+          usedTime,
+          totalSeconds,
+          count,
+          answers: formattedAnswers, // Include user answers for PDF export
+        })
+      );
+      nav("/result");
+    }, 900);
+  }
 
   function addStrike(type) {
     if (submitted) return;
@@ -111,16 +136,10 @@ export default function QuizMode() {
     setTabSwitchCount(newTab);
 
     const total = newFs + newTab;
+    toast.warn(`Security Violation ${total}/3`);
 
-    toast.warn(`Violation ${total}/3`);
-
-    if (
-      newFs >= 3 ||
-      newTab >= 3 ||
-      (newFs >= 1 && newTab >= 1) ||
-      total >= 3
-    ) {
-      toast.error("Security violated. Auto-submitting.");
+    if (newFs >= 3 || newTab >= 3 || (newFs >= 1 && newTab >= 1) || total >= 3) {
+      toast.error("Maximum violations reached. Auto-submitting exam.");
       setTimeout(() => submitExam(true), 400);
     }
   }
@@ -130,13 +149,13 @@ export default function QuizMode() {
       try {
         if (!document.fullscreenElement)
           await document.documentElement.requestFullscreen();
-      } catch {}
+      } catch { }
 
       try {
         const s = await navigator.mediaDevices.getUserMedia({ video: true });
         camRef.current = s;
       } catch {
-        toast.error("Webcam required. Auto submit.");
+        toast.error("Webcam access required");
         return submitExam(true);
       }
     };
@@ -145,14 +164,11 @@ export default function QuizMode() {
       const k = e.key.toLowerCase();
       if (k === "f5" || (e.ctrlKey && k === "r")) {
         e.preventDefault();
-        toast.warn("Refresh disabled");
+        toast.warn("Page refresh is disabled during exam");
       }
-      if (
-        k === "f12" ||
-        (e.ctrlKey && e.shiftKey && ["i", "j", "c"].includes(k))
-      ) {
+      if (k === "f12" || (e.ctrlKey && e.shiftKey && ["i", "j", "c"].includes(k))) {
         e.preventDefault();
-        toast.warn("Devtools disabled");
+        toast.warn("Developer tools are disabled during exam");
       }
     };
 
@@ -182,72 +198,175 @@ export default function QuizMode() {
   }, [submitted, fsExitCount, tabSwitchCount]);
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="min-h-screen bg-slate-50">
       <ToastContainer position="top-center" />
 
-      <div className="flex justify-between mb-4">
-        <div>
-          <h2 className="font-semibold">{active.title}</h2>
-          <p className="text-sm text-red-600">
-            Violations: {fsExitCount + tabSwitchCount}/3
-          </p>
+      {/* Exam Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div className="container-wide py-4">
+          <div className="flex items-center justify-between">
+            {/* Left - Title & Info */}
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="font-semibold text-slate-900 text-lg truncate max-w-xs sm:max-w-md">
+                  {active.title}
+                </h1>
+                <div className="flex items-center gap-4 text-sm text-slate-500">
+                  <span>{answeredCount}/{count} answered</span>
+                  <span className="flex items-center gap-1">
+                    <FaShieldAlt className={`w-3 h-3 ${fsExitCount + tabSwitchCount > 0 ? 'text-amber-500' : 'text-emerald-500'}`} />
+                    Violations: {fsExitCount + tabSwitchCount}/3
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right - Timer & Submit */}
+            <div className="flex items-center gap-4">
+              <Timer totalSeconds={totalSeconds} onEnd={() => submitExam(true)} />
+              <button
+                className="btn btn-primary"
+                onClick={() => submitExam(false)}
+                disabled={submitted}
+              >
+                <FaCheck className="w-3 h-3" />
+                Submit
+              </button>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mt-3">
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
         </div>
-        <Timer totalSeconds={totalSeconds} onEnd={() => submitExam(true)} />
-      </div>
+      </header>
 
       <AntiTabSwitch onStrike={() => addStrike("tab")} maxStrikes={3} />
 
-      <ol className="space-y-4">
-        {active.quiz.map((q, i) => (
-          <li key={i} className="border p-4 rounded">
-            <p className="font-medium mb-2">
-              {i + 1}. {q.question}
-            </p>
-            {q.options.map((opt, j) => (
-              <label
-                key={j}
-                className={`block border p-2 rounded cursor-pointer ${
-                  answers[i] === j ? "border-blue-600" : "border-gray-300"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={`q${i}`}
-                  checked={answers[i] === j}
-                  onChange={() => {
-                    const newAnswers = { ...answers, [i]: j };
-                    setAnswers(newAnswers);
-                    answersRef.current = newAnswers;
-                  }}
-                />
-                {opt}
-              </label>
-            ))}
-          </li>
-        ))}
-      </ol>
-
-      <button
-        className="btn btn-primary mt-4 cursor-pointer"
-        onClick={() => submitExam(false)}
-        disabled={submitted}
-      >
-        Submit Exam
-      </button>
-
-      {isFsModal && !submitted && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <div className="bg-white p-6 rounded shadow text-center space-y-4">
-            <h2 className="text-lg font-bold">Fullscreen Required</h2>
-            <p>You exited fullscreen.</p>
+      {/* Questions */}
+      <main className="container-narrow py-8">
+        {/* Question Navigation */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {active.quiz.map((_, i) => (
             <button
-              className="btn btn-primary cursor-pointer"
+              key={i}
+              onClick={() => setCurrentQuestion(i)}
+              className={`
+                w-10 h-10 rounded-lg text-sm font-medium cursor-pointer
+                transition-all duration-200
+                ${answers[i] !== undefined
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-white border border-slate-300 text-slate-600 hover:border-slate-400'
+                }
+                ${currentQuestion === i ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}
+              `}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+
+        {/* Current Question Card */}
+        <div className="card">
+          <div className="card-header">
+            <div className="flex items-center justify-between">
+              <span className="badge badge-neutral">
+                Question {currentQuestion + 1} of {count}
+              </span>
+              <span className={`badge ${active.quiz[currentQuestion].difficulty === 'easy' ? 'badge-success' :
+                active.quiz[currentQuestion].difficulty === 'medium' ? 'badge-warning' : 'badge-danger'
+                }`}>
+                {active.quiz[currentQuestion].difficulty}
+              </span>
+            </div>
+          </div>
+
+          <div className="card-body">
+            <p className="text-lg font-medium text-slate-900 mb-6">
+              {active.quiz[currentQuestion].question}
+            </p>
+
+            <div className="space-y-3">
+              {active.quiz[currentQuestion].options.map((opt, j) => (
+                <label
+                  key={j}
+                  className={`option-label flex items-center gap-3 ${answers[currentQuestion] === j ? 'option-label-selected' : ''
+                    }`}
+                >
+                  <input
+                    type="radio"
+                    name={`q${currentQuestion}`}
+                    checked={answers[currentQuestion] === j}
+                    onChange={() => {
+                      const newAnswers = { ...answers, [currentQuestion]: j };
+                      setAnswers(newAnswers);
+                      answersRef.current = newAnswers;
+                    }}
+                    className="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-slate-700">{opt}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="card-footer flex justify-between">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+              disabled={currentQuestion === 0}
+            >
+              Previous
+            </button>
+
+            {currentQuestion < count - 1 ? (
+              <button
+                className="btn btn-primary"
+                onClick={() => setCurrentQuestion(currentQuestion + 1)}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                className="btn btn-success"
+                onClick={() => submitExam(false)}
+                disabled={submitted}
+              >
+                <FaCheck className="w-3 h-3" />
+                Submit Exam
+              </button>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Fullscreen Modal */}
+      {isFsModal && !submitted && (
+        <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 text-center animate-fade-in">
+            <FaExpand className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              Fullscreen Required
+            </h2>
+            <p className="text-slate-600 mb-6">
+              You have exited fullscreen mode. This has been recorded as a violation.
+              Please return to fullscreen to continue your exam.
+            </p>
+            <button
+              className="btn btn-primary btn-lg w-full cursor-pointer"
               onClick={async () => {
                 setIsFsModal(false);
                 await document.documentElement.requestFullscreen();
               }}
             >
-              Resume Exam in Fullscreen
+              <FaExpand className="w-4 h-4" />
+              Resume in Fullscreen
             </button>
           </div>
         </div>

@@ -3,13 +3,13 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axiosClient";
-import { FaSignInAlt, FaSpinner } from "react-icons/fa";
+import { FaSpinner, FaLock, FaEnvelope } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import deepklarityLogo from "../assets/images/deepklarity-logo.png";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
-console.log("VITE_GOOGLE_CLIENT_ID =", import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -22,9 +22,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) {
-      console.warn(
-        "VITE_GOOGLE_CLIENT_ID is not set. Google login will be disabled."
-      );
+      console.warn("VITE_GOOGLE_CLIENT_ID is not set. Google login will be disabled.");
       return;
     }
 
@@ -58,7 +56,6 @@ export default function LoginPage() {
       }
 
       login({ token, user });
-
       toast.success("Login successful!", { autoClose: 1500 });
 
       setTimeout(() => {
@@ -108,7 +105,6 @@ export default function LoginPage() {
             }
 
             login({ token, user });
-
             toast.success("Logged in with Google!", { autoClose: 1500 });
 
             setTimeout(() => {
@@ -139,102 +135,134 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <ToastContainer />
 
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6 border border-gray-200">
-        <div className="text-center">
-          <FaSignInAlt className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-          <h1 className="text-3xl font-extrabold text-gray-900">Sign In</h1>
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-2.5 group">
+            <img
+              src={deepklarityLogo}
+              alt="DeepKlarity"
+              className="w-10 h-10 object-contain"
+            />
+            <span className="font-bold text-xl text-slate-900">
+              DeepKlarity
+            </span>
+          </Link>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email address
-            </label>
-            <input
-              type="email"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow duration-200"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="Enter your email"
-              autoComplete="email"
-            />
+        {/* Card */}
+        <div className="card card-body">
+          <div className="text-center mb-6">
+            <h1 className="text-heading text-slate-900 mb-1">Welcome back</h1>
+            <p className="text-body text-sm">Sign in to your account to continue</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow duration-200"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Enter your password"
-              autoComplete="current-password"
-            />
+          <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
+            {/* Email */}
+            <div>
+              <label className="label">Email address</label>
+              <div className="input-wrapper">
+                <FaEnvelope className="input-icon" />
+                <input
+                  type="email"
+                  className="input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="Enter your email"
+                  autoComplete="email"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="label">Password</label>
+              <div className="input-wrapper">
+                <FaLock className="input-icon" />
+                <input
+                  type="password"
+                  className="input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                />
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full"
+            >
+              {loading ? (
+                <>
+                  <FaSpinner className="animate-spin w-4 h-4" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <span>Sign In</span>
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-6">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs text-slate-400 uppercase">or</span>
+            <div className="h-px flex-1 bg-slate-200" />
           </div>
 
+          {/* Google Login */}
           <button
-            type="submit"
-            disabled={loading}
-            className="cursor-pointer w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold shadow-md hover:bg-blue-700 active:scale-[0.98] transition duration-150 flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={googleLoading || loading}
+            className="btn btn-secondary w-full"
           >
-            {loading ? (
+            {googleLoading ? (
               <>
                 <FaSpinner className="animate-spin w-4 h-4" />
-                <span>Logging in...</span>
+                <span>Connecting...</span>
               </>
             ) : (
-              <span>Login</span>
+              <>
+                <FcGoogle className="w-5 h-5" />
+                <span>Continue with Google</span>
+              </>
             )}
           </button>
-        </form>
 
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-xs text-gray-400">OR</span>
-          <div className="h-px flex-1 bg-gray-200" />
+          {/* Footer Links */}
+          <div className="flex justify-between text-sm mt-6 pt-6 border-t border-slate-100">
+            <Link
+              to="/register"
+              className="text-indigo-600 font-medium hover:text-indigo-700 transition-colors"
+            >
+              Create account
+            </Link>
+
+            <Link
+              to="/forgot-password"
+              className="text-slate-500 hover:text-slate-700 transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleGoogleLogin}
-          disabled={googleLoading || loading}
-          className="cursor-pointer w-full border border-gray-300 bg-white text-gray-800 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-gray-50 active:scale-[0.98] transition duration-150 flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {googleLoading ? (
-            <>
-              <FaSpinner className="animate-spin w-4 h-4" />
-              <span>Connecting to Google...</span>
-            </>
-          ) : (
-            <>
-              <FcGoogle className="w-5 h-5" />
-              <span>Continue with Google</span>
-            </>
-          )}
-        </button>
-
-        <div className="flex justify-between text-xs pt-2">
-          <Link
-            to="/register"
-            className="text-blue-600 font-medium hover:underline cursor-pointer transition-colors duration-150"
-          >
-            Register
+        {/* Back to Home */}
+        <p className="text-center mt-6 text-sm text-slate-500">
+          <Link to="/" className="hover:text-indigo-600 transition-colors">
+            ← Back to home
           </Link>
-
-          <Link
-            to="/forgot-password"
-            className="text-blue-600 font-medium hover:underline cursor-pointer transition-colors duration-150"
-          >
-            Forgot password?
-          </Link>
-        </div>
+        </p>
       </div>
     </div>
   );

@@ -1,0 +1,171 @@
+{
+    "id": 2,
+    "url": "https://en.wikipedia.org/wiki/Artificial_intelligence",
+    "title": "Artificial intelligence",
+    "summary": "Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans. AI research has been defined as the field of study of intelligent agents, which refers to any system that perceives its environment and takes actions that maximize its chance of achieving its goals.",
+    "key_entities": {
+        "people": [
+            "John McCarthy",
+            "Marvin Minsky",
+            "Alan Turing",
+            "Geoffrey Hinton",
+            "Yann LeCun"
+        ],
+        "organizations": [
+            "MIT",
+            "Stanford University",
+            "Google",
+            "OpenAI",
+            "DeepMind"
+        ],
+        "locations": [
+            "United States",
+            "United Kingdom",
+            "Silicon Valley"
+        ]
+    },
+    "sections": [
+        "History",
+        "Goals",
+        "Approaches",
+        "Machine learning",
+        "Deep learning",
+        "Natural language processing",
+        "Computer vision",
+        "Robotics",
+        "Ethics",
+        "Applications"
+    ],
+    "quiz": [
+        {
+            "question": "Who coined the term 'artificial intelligence' in 1956?",
+            "options": [
+                "Alan Turing",
+                "John McCarthy",
+                "Marvin Minsky",
+                "Claude Shannon"
+            ],
+            "answer": "John McCarthy",
+            "difficulty": "medium",
+            "explanation": "John McCarthy coined the term 'artificial intelligence' at the Dartmouth Conference in 1956."
+        },
+        {
+            "question": "What is machine learning?",
+            "options": [
+                "Programming computers manually",
+                "Computers learning from data without explicit programming",
+                "The study of mechanical machines",
+                "Human-like robots"
+            ],
+            "answer": "Computers learning from data without explicit programming",
+            "difficulty": "easy",
+            "explanation": "Machine learning is a subset of AI that enables computers to learn and improve from experience without being explicitly programmed."
+        },
+        {
+            "question": "What type of neural network is commonly used for image recognition?",
+            "options": [
+                "Recurrent Neural Network",
+                "Convolutional Neural Network",
+                "Generative Adversarial Network",
+                "Simple Perceptron"
+            ],
+            "answer": "Convolutional Neural Network",
+            "difficulty": "medium",
+            "explanation": "Convolutional Neural Networks (CNNs) are specifically designed for processing grid-like data such as images."
+        },
+        {
+            "question": "What was the first AI program to defeat a world chess champion?",
+            "options": [
+                "AlphaGo",
+                "Watson",
+                "Deep Blue",
+                "GPT"
+            ],
+            "answer": "Deep Blue",
+            "difficulty": "medium",
+            "explanation": "IBM's Deep Blue defeated world chess champion Garry Kasparov in 1997."
+        },
+        {
+            "question": "What is the Turing Test designed to evaluate?",
+            "options": [
+                "Computer processing speed",
+                "Machine's ability to exhibit intelligent behavior indistinguishable from humans",
+                "Robot physical capabilities",
+                "Programming language efficiency"
+            ],
+            "answer": "Machine's ability to exhibit intelligent behavior indistinguishable from humans",
+            "difficulty": "easy",
+            "explanation": "The Turing Test evaluates a machine's ability to exhibit intelligent behavior equivalent to, or indistinguishable from, that of a human."
+        },
+        {
+            "question": "What is Natural Language Processing (NLP)?",
+            "options": [
+                "Processing natural resources",
+                "AI's ability to understand and generate human language",
+                "Programming in native code",
+                "Natural computing methods"
+            ],
+            "answer": "AI's ability to understand and generate human language",
+            "difficulty": "easy",
+            "explanation": "NLP is a branch of AI concerned with giving computers the ability to understand and generate human language."
+        },
+        {
+            "question": "Which AI system defeated the world Go champion in 2016?",
+            "options": [
+                "Deep Blue",
+                "Watson",
+                "AlphaGo",
+                "GPT-3"
+            ],
+            "answer": "AlphaGo",
+            "difficulty": "medium",
+            "explanation": "DeepMind's AlphaGo defeated world Go champion Lee Sedol in 2016."
+        },
+        {
+            "question": "What is 'deep learning'?",
+            "options": [
+                "Learning at great depths underwater",
+                "Neural networks with many layers",
+                "Intensive human study",
+                "Surface-level machine learning"
+            ],
+            "answer": "Neural networks with many layers",
+            "difficulty": "easy",
+            "explanation": "Deep learning refers to neural networks with multiple layers (deep neural networks) that can learn complex patterns."
+        },
+        {
+            "question": "What ethical concern is commonly associated with AI development?",
+            "options": [
+                "Too much electricity usage",
+                "Bias in AI systems and job displacement",
+                "Computers becoming too slow",
+                "Lack of internet connectivity"
+            ],
+            "answer": "Bias in AI systems and job displacement",
+            "difficulty": "medium",
+            "explanation": "Major ethical concerns include algorithmic bias, privacy issues, and the potential for job displacement."
+        },
+        {
+            "question": "What is a 'neural network' in AI?",
+            "options": [
+                "A network of human neurons",
+                "A computing system inspired by biological neural networks",
+                "A social network for scientists",
+                "A type of internet connection"
+            ],
+            "answer": "A computing system inspired by biological neural networks",
+            "difficulty": "easy",
+            "explanation": "Artificial neural networks are computing systems inspired by biological neural networks that constitute animal brains."
+        }
+    ],
+    "related_topics": [
+        "Machine learning",
+        "Deep learning",
+        "Neural networks",
+        "Natural language processing",
+        "Computer vision",
+        "Robotics",
+        "Expert systems",
+        "Turing test"
+    ]
+}

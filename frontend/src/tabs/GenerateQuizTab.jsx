@@ -1,9 +1,11 @@
+// src/tabs/GenerateQuizTab.jsx
 import { useState } from "react";
 import { generateQuiz } from "../services/api";
 import QuizDisplay from "../components/QuizDisplay";
 import { useNavigate } from "react-router-dom";
+import { FaPlay, FaSpinner, FaLink, FaInfoCircle } from "react-icons/fa";
 
-const COUNTS = [1,5, 10, 20, 30, 40, 50];
+const COUNTS = [5, 10, 15, 20, 30, 40, 50];
 
 export default function GenerateQuizTab() {
   const [url, setUrl] = useState("");
@@ -11,21 +13,21 @@ export default function GenerateQuizTab() {
   const [hideAnswers, setHideAnswers] = useState(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   async function handleGenerate() {
+    setError("");
     const trimmed = url.trim();
+
     if (!trimmed) {
-      alert("Please enter a Wikipedia URL");
+      setError("Please enter a Wikipedia URL");
       return;
     }
 
-    // Accept urls like:
-    // https://en.wikipedia.org/wiki/Alan_Turing
-    // https://en.wikipedia.org/w/index.php?title=Alan_Turing&oldid=...
     const wikiPattern = /^https?:\/\/(en\.)?wikipedia\.org\/(wiki|w)\/?/i;
     if (!wikiPattern.test(trimmed)) {
-      alert("* Enter a valid Wikipedia URL");
+      setError("Please enter a valid Wikipedia URL (e.g., https://en.wikipedia.org/wiki/...)");
       return;
     }
 
@@ -39,7 +41,7 @@ export default function GenerateQuizTab() {
       }
       if (!title) throw new Error("no title");
     } catch (err) {
-      alert("* Unable to parse Wikipedia URL. Enter a valid URL.");
+      setError("Unable to parse Wikipedia URL. Please enter a valid URL.");
       return;
     }
 
@@ -47,16 +49,16 @@ export default function GenerateQuizTab() {
       const encodedTitle = encodeURIComponent(title);
       const check = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodedTitle}`);
       if (!check.ok) {
-        alert("* Wikipedia article not found. Enter a valid URL.");
+        setError("Wikipedia article not found. Please check the URL.");
         return;
       }
       const info = await check.json();
       if (info.type === "https://mediawiki.org/wiki/HyperSwitch/errors/not_found") {
-        alert("* Wikipedia article does not exist. Try another URL.");
+        setError("Wikipedia article does not exist. Please try another URL.");
         return;
       }
     } catch (e) {
-      alert("* Unable to validate Wikipedia page. Check your internet.");
+      setError("Unable to validate Wikipedia page. Please check your internet connection.");
       return;
     }
 
@@ -69,7 +71,7 @@ export default function GenerateQuizTab() {
       localStorage.setItem("activeQuiz", JSON.stringify(res));
     } catch (err) {
       console.error("Quiz generation failed:", err);
-      alert("Quiz generation failed");
+      setError("Quiz generation failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -77,40 +79,128 @@ export default function GenerateQuizTab() {
 
   return (
     <div className="space-y-6">
-      <label className="font-medium text-gray-700">Wikipedia Article URL</label>
-      <input
-        className="input input-bordered w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="https://en.wikipedia.org/wiki/Alan_Turing"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-      />
+      {/* Input Section */}
+      <div className="card card-body">
+        <div className="space-y-5">
+          {/* URL Input */}
+          <div>
+            <label className="label">
+              <FaLink className="inline w-3 h-3 mr-1.5" />
+              Wikipedia Article URL
+            </label>
+            <input
+              className={`input ${error ? 'input-error' : ''}`}
+              placeholder="https://en.wikipedia.org/wiki/Alan_Turing"
+              value={url}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                setError("");
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+            />
+            {error && (
+              <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <FaInfoCircle className="w-3 h-3" />
+                {error}
+              </p>
+            )}
+          </div>
 
-      <div className="flex items-center gap-4">
-        <label>Questions:</label>
-        <select
-          className="select select-bordered cursor-pointer hover:border-gray-400"
-          value={count}
-          onChange={(e) => setCount(Number(e.target.value))}
-        >
-          {COUNTS.map((n) => (
-            <option key={n} value={n} className="cursor-pointer">
-              {n}
-            </option>
-          ))}
-        </select>
+          {/* Options Row */}
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <label className="label">Number of Questions</label>
+              <select
+                className="select"
+                value={count}
+                onChange={(e) => setCount(Number(e.target.value))}
+              >
+                {COUNTS.map((n) => (
+                  <option key={n} value={n}>
+                    {n} questions
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <button className="btn btn-primary cursor-pointer hover:opacity-90" onClick={handleGenerate} disabled={loading}>
-          {loading ? "Generating..." : "Generate Quiz"}
-        </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleGenerate}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <FaSpinner className="w-4 h-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  Generate Quiz
+                </>
+              )}
+            </button>
 
-        {data && (
-          <button className="btn bg-green-600 hover:bg-green-700 text-white cursor-pointer" onClick={() => navigate("/exam")}>
-            Start Quiz
-          </button>
+            {data && (
+              <button
+                className="btn btn-success"
+                onClick={() => navigate("/exam")}
+              >
+                <FaPlay className="w-3 h-3" />
+                Start Exam
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="mt-6 p-6 border border-slate-200 rounded-lg bg-slate-50">
+            <div className="flex items-center gap-3">
+              <FaSpinner className="w-5 h-5 animate-spin text-indigo-600" />
+              <div>
+                <p className="font-medium text-slate-900">Generating your quiz...</p>
+                <p className="text-sm text-slate-500">
+                  This may take 10-30 seconds depending on article length
+                </p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
-      {data && <QuizDisplay data={data} hideAnswers={hideAnswers} />}
+      {/* Quiz Display */}
+      {data && !loading && (
+        <div className="animate-fade-in">
+          <QuizDisplay data={data} hideAnswers={hideAnswers} />
+        </div>
+      )}
+
+      {/* Sample URLs Hint */}
+      {!data && !loading && (
+        <div className="card card-body">
+          <h3 className="text-sm font-medium text-slate-700 mb-3">
+            Sample URLs to try:
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              "Alan_Turing",
+              "Artificial_intelligence",
+              "Python_(programming_language)",
+              "Albert_Einstein"
+            ].map((topic) => (
+              <button
+                key={topic}
+                onClick={() => setUrl(`https://en.wikipedia.org/wiki/${topic}`)}
+                className="text-xs px-3 py-1.5 rounded-full border border-slate-200 
+                         text-slate-600 hover:bg-slate-50 hover:border-slate-300
+                         transition-colors cursor-pointer"
+              >
+                {topic.replace(/_/g, " ").replace(/\(.*\)/, "")}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

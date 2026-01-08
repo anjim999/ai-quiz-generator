@@ -1,32 +1,77 @@
+// src/components/HistoryTable.jsx
 import React from "react";
+import { FaEye, FaCalendar, FaLink } from "react-icons/fa";
 
 export default function HistoryTable({ items, onDetails }) {
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <div className="card overflow-x-auto">
-      <table className="min-w-full text-sm">
+    <div className="card overflow-hidden">
+      <table className="min-w-full">
         <thead>
-          <tr className="text-left border-b">
-            <th className="py-2">ID</th>
-            <th className="py-2">Title</th>
-            <th className="py-2">URL</th>
-            <th className="py-2">Generated</th>
-            <th className="py-2">Actions</th>
+          <tr className="bg-slate-50 border-b border-slate-200">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Quiz
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider hidden md:table-cell">
+              Source
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Date
+            </th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Actions
+            </th>
           </tr>
         </thead>
-        <tbody>
-          {items?.length ? items.map(row => (
-            <tr key={row.id} className="border-b">
-              <td className="py-2 pr-3">{row.id}</td>
-              <td className="py-2 pr-3">{row.title}</td>
-              <td className="py-2 pr-3 max-w-[380px] truncate">{row.url}</td>
-              <td className="py-2 pr-3">{new Date(row.date_generated).toLocaleString()}</td>
-              <td className="py-2">
-                <button className="btn btn-primary cursor-pointer" onClick={() => onDetails(row.id)}>Details</button>
+        <tbody className="divide-y divide-slate-100">
+          {items?.map((row) => (
+            <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+              <td className="px-6 py-4">
+                <div>
+                  <p className="font-medium text-slate-900 truncate max-w-xs">
+                    {row.title}
+                  </p>
+                  <p className="text-xs text-slate-500">ID: {row.id}</p>
+                </div>
+              </td>
+              <td className="px-6 py-4 hidden md:table-cell">
+                <a
+                  href={row.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 truncate max-w-xs"
+                >
+                  <FaLink className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">Wikipedia</span>
+                </a>
+              </td>
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <FaCalendar className="w-3 h-3 text-slate-400" />
+                  {formatDate(row.date_generated)}
+                </div>
+              </td>
+              <td className="px-6 py-4 text-right">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => onDetails(row.id)}
+                >
+                  <FaEye className="w-3 h-3" />
+                  View
+                </button>
               </td>
             </tr>
-          )) : (
-            <tr><td colSpan="5" className="py-6 text-center text-gray-500">No history yet</td></tr>
-          )}
+          ))}
         </tbody>
       </table>
     </div>

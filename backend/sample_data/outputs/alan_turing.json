@@ -1,0 +1,173 @@
+{
+    "id": 1,
+    "url": "https://en.wikipedia.org/wiki/Alan_Turing",
+    "title": "Alan Turing",
+    "summary": "Alan Mathison Turing was a British mathematician, computer scientist, logician, cryptanalyst, philosopher, and theoretical biologist. He was highly influential in the development of theoretical computer science and is widely considered to be the father of both theoretical computer science and artificial intelligence.",
+    "key_entities": {
+        "people": [
+            "Alan Turing",
+            "Alonzo Church",
+            "Max Newman",
+            "Gordon Welchman",
+            "Joan Clarke"
+        ],
+        "organizations": [
+            "University of Cambridge",
+            "Princeton University",
+            "Bletchley Park",
+            "National Physical Laboratory",
+            "University of Manchester"
+        ],
+        "locations": [
+            "United Kingdom",
+            "London",
+            "Manchester",
+            "Maida Vale"
+        ]
+    },
+    "sections": [
+        "Early life and education",
+        "Career and research",
+        "Cryptanalysis",
+        "Bombe",
+        "Hut 8 and Naval Enigma",
+        "Turingery",
+        "Early computers and the Turing test",
+        "Pattern formation and mathematical biology",
+        "Personal life",
+        "Death",
+        "Posthumous recognition"
+    ],
+    "quiz": [
+        {
+            "question": "Where did Alan Turing study mathematics as an undergraduate?",
+            "options": [
+                "Oxford University",
+                "King's College, Cambridge",
+                "Princeton University",
+                "Imperial College London"
+            ],
+            "answer": "King's College, Cambridge",
+            "difficulty": "easy",
+            "explanation": "Mentioned in the 'Early life and education' section - Turing studied mathematics at King's College, Cambridge from 1931 to 1934."
+        },
+        {
+            "question": "What was the name of the machine Turing helped design to decrypt German Enigma messages?",
+            "options": [
+                "Colossus",
+                "ENIAC",
+                "Bombe",
+                "Universal Machine"
+            ],
+            "answer": "Bombe",
+            "difficulty": "medium",
+            "explanation": "The Bombe was an electromechanical machine designed by Turing and Gordon Welchman to decrypt Enigma-enciphered messages."
+        },
+        {
+            "question": "What concept did Turing propose in 1950 to test machine intelligence?",
+            "options": [
+                "Turing Machine",
+                "Turing Test",
+                "Universal Computer",
+                "Enigma Test"
+            ],
+            "answer": "Turing Test",
+            "difficulty": "easy",
+            "explanation": "In 1950, Turing proposed the Turing Test as a measure of machine intelligence in his paper 'Computing Machinery and Intelligence'."
+        },
+        {
+            "question": "At which secret establishment did Turing work during World War II?",
+            "options": [
+                "MI6 Headquarters",
+                "Bletchley Park",
+                "Whitehall",
+                "RAF Bomber Command"
+            ],
+            "answer": "Bletchley Park",
+            "difficulty": "easy",
+            "explanation": "Turing worked at Bletchley Park, Britain's codebreaking centre during World War II."
+        },
+        {
+            "question": "What was Turing's PhD thesis about at Princeton University?",
+            "options": [
+                "Cryptography methods",
+                "Computing machinery",
+                "Systems of logic based on ordinals",
+                "Artificial intelligence"
+            ],
+            "answer": "Systems of logic based on ordinals",
+            "difficulty": "hard",
+            "explanation": "Turing's PhD thesis at Princeton was titled 'Systems of Logic Based on Ordinals' and introduced the concept of relative computing."
+        },
+        {
+            "question": "What field did Turing contribute to in his later years involving pattern formation in nature?",
+            "options": [
+                "Quantum physics",
+                "Mathematical biology",
+                "Astronomy",
+                "Chemistry"
+            ],
+            "answer": "Mathematical biology",
+            "difficulty": "hard",
+            "explanation": "In his later work, Turing worked on mathematical biology, particularly morphogenesis and pattern formation in nature."
+        },
+        {
+            "question": "Which award did Turing receive in 2013 posthumously from Queen Elizabeth II?",
+            "options": [
+                "Knighthood",
+                "Royal Pardon",
+                "Nobel Prize",
+                "Victoria Cross"
+            ],
+            "answer": "Royal Pardon",
+            "difficulty": "medium",
+            "explanation": "In 2013, Queen Elizabeth II granted Turing a posthumous royal pardon for his 1952 conviction for gross indecency."
+        },
+        {
+            "question": "What is the annual award given in Turing's name considered equivalent to in computing?",
+            "options": [
+                "The Oscar",
+                "The Nobel Prize",
+                "The Pulitzer",
+                "The Grammy"
+            ],
+            "answer": "The Nobel Prize",
+            "difficulty": "medium",
+            "explanation": "The Turing Award is given annually by the ACM and is widely considered the Nobel Prize of computing."
+        },
+        {
+            "question": "Who was Turing's doctoral supervisor at Princeton?",
+            "options": [
+                "Albert Einstein",
+                "John von Neumann",
+                "Alonzo Church",
+                "Max Newman"
+            ],
+            "answer": "Alonzo Church",
+            "difficulty": "hard",
+            "explanation": "Turing completed his PhD at Princeton under the supervision of Alonzo Church, who had independently developed the lambda calculus."
+        },
+        {
+            "question": "What year was Alan Turing born?",
+            "options": [
+                "1910",
+                "1912",
+                "1915",
+                "1920"
+            ],
+            "answer": "1912",
+            "difficulty": "easy",
+            "explanation": "Alan Turing was born on 23 June 1912 in Maida Vale, London."
+        }
+    ],
+    "related_topics": [
+        "Cryptography",
+        "Enigma machine",
+        "Computer science history",
+        "Artificial intelligence",
+        "Turing machine",
+        "Turing test",
+        "Bletchley Park",
+        "History of computing"
+    ]
+}
