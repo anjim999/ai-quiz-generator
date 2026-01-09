@@ -1,4 +1,4 @@
-# AI Quiz Generator - MERN Stack
+# AI Quiz Generator
 
 A modern, full-stack application that generates interactive quizzes from any Wikipedia article using Google's Gemini AI. 
 
