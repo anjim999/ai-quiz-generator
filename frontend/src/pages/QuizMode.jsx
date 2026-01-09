@@ -207,7 +207,7 @@ export default function QuizMode() {
       if (!document.fullscreenElement && !submitted) {
         setIsFsModal(true);
         addStrike("fs");
-      }
+      } 
     };
     document.addEventListener("fullscreenchange", handleFS);
     return () => document.removeEventListener("fullscreenchange", handleFS);
